@@ -1,5 +1,5 @@
 group 'com.elastic.barretta'
-version '1.0'
+version '1.0.1'
 
 //gives us the shadowJar task to build an uberjar for AWS Lambda
 buildscript {

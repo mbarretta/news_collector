@@ -24,14 +24,19 @@ class Scraper {
         ].each { tag ->
             log.info("fetching for [$tag]")
 
-            //get all the urls from each card, and fetch the article data from each
+            //get all the urls from each card
             def articleUrls = new JsonSlurper().parse((AP_URL + tag).toURL()).cards.contents*.gcsUrl.flatten()
-            log.debug("...found [${articleUrls.size()}] articles")
+            log.trace("...found [${articleUrls.size()}] articles")
 
+            //fetch article for each url found
             def posted = 0
             articleUrls.each { url ->
                 def article = new JsonSlurper().parse(url.toURL())
+
+                //quality-check - not all "articles" are actually articles
                 if (article && article.storyHTML && !article.shortId.contains(":")) {
+
+                    //filter duplicates
                     if (!client.docExists("shortId", article.shortId)) {
                         client.postDoc([
                             title         : article.title,
@@ -44,13 +49,13 @@ class Scraper {
                         posted++
 
                     } else {
-                        log.debug("doc [$article.shortId] already exists in index")
+                        log.trace("doc [$article.shortId] already exists in index")
                     }
                 } else {
-                    log.debug("empty article found [$url]")
+                    log.trace("empty article found [$url]")
                 }
             }
-            log.debug("...posted [$posted]")
+            log.trace("...posted [$posted]")
             results << [(tag):posted]
         }
 
