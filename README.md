@@ -21,7 +21,8 @@ usage: APNewCollector
     "url": "http://myhost.com:9200",
     "index": "ap_news",
     "user": "elastic",
-    "password: "changeme"
+    "password: "changeme",
+    "clean": "false"
  }
  ```
  **NOTE:** For Lambda, only `url` is required
