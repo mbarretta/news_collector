@@ -17,7 +17,8 @@ class APNewsCollector {
                 shortId       : [type: "keyword"],
                 url           : [type: "keyword"],
                 byline        : [type: "text"],
-                test          : [type: "text"],
+                section       : [type: "keyword"],
+                text          : [type: "text"],
                 entityObjects : [type: "nested"],
                 entityNames   : [type: "text"]
             ]

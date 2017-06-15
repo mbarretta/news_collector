@@ -44,6 +44,7 @@ class Scraper {
                             url           : article.localLinkUrl,
                             byline        : article.bylines,
                             date_published: article.published,
+                            section       : tag,
                             text          : article.storyHTML.replaceAll(/<.*?>/, "").replaceAll(/\s{2,}/, " ")
                         ])
                         posted++
