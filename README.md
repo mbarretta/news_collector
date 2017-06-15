@@ -1,5 +1,5 @@
-# ap_news_collector
-fetch top news from AP into Elasticsearch
+# AP News Collector
+Fetch top news from AP into Elasticsearch
 
 ## CLI
 ```
