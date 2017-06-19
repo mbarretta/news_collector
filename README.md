@@ -8,7 +8,7 @@ If you're using Lambda, you can also put values in `properties.groovy`, but they
 
 ### Authentication
 
-If you set an Elasticsearch user using one of the various config methods, then you'll need to also send a password. If you don't configure a user, it'll figure you don't have authentication setup! And shame on your if you don't. [X-Pack](https://www.elastic.co/products/x-pack) is loaded with features (to include security) that make Elasticsearch into a product-level analytic powerhouse.
+If you set an Elasticsearch user using one of the various config methods, then you'll need to also send a password. If you don't configure a user, it'll figure you don't have authentication setup! And shame on you if you don't. [X-Pack](https://www.elastic.co/products/x-pack) is loaded with features (to include security) that make Elasticsearch into a production-level analytic powerhouse.
 
 ### CLI
 ```
