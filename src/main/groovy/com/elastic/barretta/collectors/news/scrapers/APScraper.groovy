@@ -1,3 +1,6 @@
+package com.elastic.barretta.collectors.news.scrapers
+
+import com.elastic.barretta.collectors.news.ESClient
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
 
@@ -5,9 +8,14 @@ import groovy.util.logging.Slf4j
  * Pull docs from AP and push into ES using supplied client
  */
 @Slf4j
-class Scraper {
+class APScraper {
 
-    static def scrape(ESClient client) {
+    static def scrape(ConfigObject config, ESClient client) {
+        if (!config.newsApi.apiKey) {
+            log.error("no API key set for NewsAPI - skipping")
+            return
+        }
+
         def results = [:]
         final def AP_URL = "https://afs-prod.appspot.com/api/v2/feed/tag?tags="
 
@@ -44,6 +52,7 @@ class Scraper {
                             url           : article.localLinkUrl,
                             byline        : article.bylines,
                             date_published: article.published,
+                            source        : "associated-press",
                             section       : tag,
                             text          : article.storyHTML.replaceAll(/<.*?>/, "").replaceAll(/\s{2,}/, " ")
                         ])

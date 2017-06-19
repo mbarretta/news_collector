@@ -1,3 +1,5 @@
+package com.elastic.barretta.collectors.news
+
 import groovy.util.logging.Slf4j
 import wslite.http.auth.HTTPBasicAuthorization
 import wslite.rest.RESTClient
@@ -78,7 +80,7 @@ class ESClient {
     }
 
     def docExists(String field, String value, String index = config.index, String type = config.type) {
-        def response = client.get(path:"/$index/$type/_search", query: [q: "$field:$value"])
+        def response = client.get(path:"/$index/$type/_search", query: [q: "$field:${URLEncoder.encode(value, "UTF-8")}"])
         return response.json.hits.total > 0
     }
 

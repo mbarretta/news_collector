@@ -1,5 +1,5 @@
 group 'com.elastic.barretta'
-version '1.0.2'
+version '1.1.0'
 
 //gives us the shadowJar task to build an uberjar for AWS Lambda
 buildscript {
@@ -15,7 +15,7 @@ apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'groovy'
 apply plugin: 'application'
 
-mainClassName = 'APNewsCollector'
+mainClassName = 'com.elastic.barretta.collectors.news.NewsCollector'
 
 repositories {
     mavenCentral()
@@ -23,6 +23,7 @@ repositories {
 
 dependencies {
     compile(
+        'com.syncthemall:boilerpipe:1.2.2',
         'commons-cli:commons-cli:1.2',
         'org.codehaus.groovy:groovy-all:2.4.11',
         'com.github.groovy-wslite:groovy-wslite:1.1.3',
