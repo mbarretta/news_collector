@@ -1,4 +1,4 @@
-# AP News Collector
+# News Collector
 Fetch top news from AP and [NewsAPI](https://newsapi.org) into Elasticsearch
 
 ## Config
