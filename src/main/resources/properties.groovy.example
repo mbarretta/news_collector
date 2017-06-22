@@ -1,0 +1,12 @@
+es {
+    url = "http://localhost:9200"
+    index = "news"
+//    user = "elastic"
+//    password = "changeme"
+}
+
+newsApi {
+//    apiKey = ""
+}
+
+//clean = true
