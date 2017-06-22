@@ -44,7 +44,7 @@ class ESClient {
     }
 
     def deleteIndex(String index = config.index) {
-        log.info("deleting index [${config.url + index}]")
+        log.info("deleting index [$config.url/$index]")
         client.delete(path: "/$index")
     }
 

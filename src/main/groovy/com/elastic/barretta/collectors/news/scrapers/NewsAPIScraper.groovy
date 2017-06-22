@@ -8,8 +8,16 @@ import groovy.util.logging.Slf4j
 @Slf4j
 class NewsAPIScraper {
 
-    static def scrape(ConfigObject config, ESClient client) {
-        final def URL = "https://newsapi.org/v1/articles"
+    static class Config {
+        String key
+        String url = "https://newsapi.org/v1/articles"
+    }
+
+    static def scrape(Config config, ESClient client) {
+        if (!config.key) {
+            log.error("no API key set for NewsAPI - skipping")
+            return
+        }
 
         def results = [:]
         [
@@ -41,7 +49,7 @@ class NewsAPIScraper {
             log.info("fetching source [$it]")
 
             def posted = 0
-            def url = new URL(URL + "?sortyBy=latest&apiKey=${config.newsApi.apiKey as String}&source=$it")
+            def url = new URL(config.url + "?sortyBy=latest&apiKey=${config.key}&source=$it")
 
             new JsonSlurper().parse(url).articles.each { article ->
                 if (!client.docExists("url.keyword", article.url)) {
@@ -56,7 +64,7 @@ class NewsAPIScraper {
                         ])
                         posted++
                     } catch (e) {
-                        log.error("error fetching or posting article [${e.getCause()}]")
+                        log.error("error fetching or posting article [${e.getCause()}] [$article.url]")
                     }
                 } else {
                     log.trace("doc [$article.url] already exists in index")

@@ -10,11 +10,7 @@ import groovy.util.logging.Slf4j
 @Slf4j
 class APScraper {
 
-    static def scrape(ConfigObject config, ESClient client) {
-        if (!config.newsApi.apiKey) {
-            log.error("no API key set for NewsAPI - skipping")
-            return
-        }
+    static def scrape(ESClient client) {
 
         def results = [:]
         final def AP_URL = "https://afs-prod.appspot.com/api/v2/feed/tag?tags="
