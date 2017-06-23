@@ -51,36 +51,42 @@ class NewsAPIScraper {
             def posted = 0
             def url = new URL(config.url + "?apiKey=${config.key}&source=$it")
 
-            new JsonSlurper().parse(url).articles.each { article ->
-                def doc = [
-                    title         : article.title,
-                    url           : article.url,
-                    byline        : article.author,
-                    date_published: article.publishedAt,
-                    source        : it,
-                    text          : ArticleExtractor.INSTANCE.getText(article.url.toURL())
-                ]
+            try {
 
-                if (!client.docExists("url.keyword", article.url)) {
-                    try {
+                //loop through each article we found...
+                new JsonSlurper().parse(url).articles.each { article ->
+                    def doc = [
+                        title         : article.title,
+                        url           : article.url,
+                        byline        : article.author,
+                        date_published: article.publishedAt,
+                        source        : it,
+                        text          : ArticleExtractor.INSTANCE.getText(article.url.toURL())
+                    ]
+
+                    //if it's new, write it
+                    if (!client.docExists("url.keyword", article.url)) {
                         client.putDoc(doc)
                         posted++
-                    } catch (e) {
-                        log.error("error fetching or posting article [${e.getCause()}] [$article.url]")
                     }
-                } else {
-                    log.trace("doc [$article.url] already exists in index")
-                    def existingDoc = client.getDocByUniqueField("url.keyword", article.url)
 
-                    //if the doc has a new published date, we'll assume content was changed or added: we'll be doing an update
-                    if (existingDoc._source.date_published != doc.date_published) {
-                        log.trace("...updating due to newer timestamp [$doc.date_published] vs [$existingDoc._source.date_published]")
-                        client.updateDoc(existingDoc._id, doc)
+                    //else, decide if we should update it or ignore it
+                    else {
+                        log.trace("doc [$article.url] already exists in index")
+                        def existingDoc = client.getDocByUniqueField("url.keyword", article.url)
+
+                        //if the doc has a new published date, we'll assume content was changed or added: we'll be doing an update
+                        if (existingDoc._source.date_published != doc.date_published) {
+                            log.trace("...updating due to newer timestamp [$doc.date_published] vs [$existingDoc._source.date_published]")
+                            client.updateDoc(existingDoc._id, doc)
+                        }
                     }
                 }
+                log.trace("...posted [$posted]")
+                results << [(it): posted]
+            } catch (e) {
+                log.error("error fetching or posting article [${e.getCause()}]")
             }
-            log.trace("...posted [$posted]")
-            results << [(it): posted]
         }
         log.info("results:\n$results")
         return results
