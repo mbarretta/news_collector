@@ -73,8 +73,8 @@ class ESClient {
         return exists
     }
 
-    def putDoc(Map content, index = config.index, type = config.type) {
-        client.put(path: "/$index/$type") {
+    def postDoc(Map content, index = config.index, type = config.type) {
+        client.post(path: "/$index/$type") {
             json content
         }
     }

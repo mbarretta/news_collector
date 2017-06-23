@@ -66,7 +66,7 @@ class NewsAPIScraper {
 
                     //if it's new, write it
                     if (!client.docExists("url.keyword", article.url)) {
-                        client.putDoc(doc)
+                        client.postDoc(doc)
                         posted++
                     }
 

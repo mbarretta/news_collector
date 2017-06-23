@@ -52,7 +52,7 @@ class APScraper {
 
                     //filter duplicates
                     if (!client.docExists("shortId", article.shortId)) {
-                        client.putDoc(doc)
+                        client.postDoc(doc)
                         posted++
 
                     } else {
