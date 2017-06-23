@@ -2,9 +2,9 @@
 Fetch top news from AP and [NewsAPI](https://newsapi.org) into Elasticsearch
 
 ## Config
-You have a two main options: CLI args and/or a `properties.groovy`. There are also defaults defined in `NewsCollector.groovy` ...probably should just remove those and use `properties.groovy` as the default property repo.
+You have a two main options: CLI args and/or a `properties.groovy` (create your own via the supplied example in `src/main/resources`). There are also defaults defined in `NewsCollector.groovy` ...probably should just remove those and use `properties.groovy` as the default property repo.
 
-If you're using Lambda, you can also put values in `properties.groovy`, but they'll end-up packaged with the uberjar. Alternatively, you can pass in JSON. I use CloudWatch Events to send the necessary JSON every 5 hours.
+If you're using AWS Lambda, you can also use values in `properties.groovy`, but they'll end-up packaged with the uberjar. Alternatively, you can pass in JSON (see details below).
 
 ### Authentication
 
@@ -27,23 +27,22 @@ usage: APNewCollector
 Support for AWS Lambda is available by building an uber-jar (via [shadowJar](https://github.com/johnrengelman/shadow)) and pointing towards `com.elastic.barretta.collectors.news.lambda.NewsCollectorLambda::handleRequest`.
 
 ...yes, that package name is obnoxious, and I probably should change it or remove the vast majority of it
- 
-Expected input is JSON in the form:
+
+ As mentioned above, you can configure it via `properties.groovy` on the classpath or by passing in JSON in the form:
 ```
  {
-    "url": "http://myhost.com:9200",
-    "index": "ap_news",
-    "user": "elastic",
-    "password: "changeme",
-    "newsApiKey": "mykey"
-    "clean": "false"
+    "es" {
+        "url": "http://myhost.com:9200",
+        "index": "news",
+        "user": "elastic",
+        "pass": "changeme"
+    }
+    "newsApi": {
+        "key": "mykey"
+    }
+    "clean": "false" //or true!
  }
 ```
 
-**NOTE:** For Lambda, only `url` is required, though if you don't have `newsApiKey` set in `properties.groovy` and you want to fetch stuff from there, you'll need to have that passed in as well.
-
-
 #### News API
 If you don't want to get a NewsAPI key, no worries! Just leave that config blank and it'll be skipped
-
-See below for more.
