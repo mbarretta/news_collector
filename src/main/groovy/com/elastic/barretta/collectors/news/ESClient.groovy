@@ -73,15 +73,30 @@ class ESClient {
         return exists
     }
 
-    def postDoc(Map content, index = config.index, type = config.type) {
-        client.post(path: "/$index/$type") {
+    def putDoc(Map content, index = config.index, type = config.type) {
+        client.put(path: "/$index/$type") {
+            json content
+        }
+    }
+
+    def updateDoc(id, Map content, index = config.index, type = config.type) {
+        client.put(path:"/$index/$type/$id") {
             json content
         }
     }
 
     def docExists(String field, String value, String index = config.index, String type = config.type) {
-        def response = client.get(path:"/$index/$type/_search", query: [q: "$field:${URLEncoder.encode(value, "UTF-8")}"])
+        def response = client.post(path:"/$index/$type/_search") {
+            json size: 0, query: [ match: [ (field): value ] ]
+        }
         return response.json.hits.total > 0
+    }
+
+    def getDocByUniqueField(String uniqueField, String value, String index = config.index, String type = config.type) {
+        def response = client.post(path:"/$index/$type/_search") {
+            json size: 1, query: [ match: [ (uniqueField): value ] ]
+        }
+        return response.json.hits.hits[0]
     }
 
     private testClient() {

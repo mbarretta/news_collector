@@ -39,23 +39,24 @@ class APScraper {
 
                 //quality-check - not all "articles" are actually articles
                 if (article && article.storyHTML && !article.shortId.contains(":")) {
+                    def doc = [
+                        title         : article.title,
+                        shortId       : article.shortId,
+                        url           : article.localLinkUrl,
+                        byline        : article.bylines,
+                        date_published: article.published,
+                        source        : "associated-press",
+                        section       : tag,
+                        text          : article.storyHTML.replaceAll(/<.*?>/, "").replaceAll(/\s{2,}/, " ")
+                    ]
 
                     //filter duplicates
                     if (!client.docExists("shortId", article.shortId)) {
-                        client.postDoc([
-                            title         : article.title,
-                            shortId       : article.shortId,
-                            url           : article.localLinkUrl,
-                            byline        : article.bylines,
-                            date_published: article.published,
-                            source        : "associated-press",
-                            section       : tag,
-                            text          : article.storyHTML.replaceAll(/<.*?>/, "").replaceAll(/\s{2,}/, " ")
-                        ])
+                        client.putDoc(doc)
                         posted++
 
                     } else {
-                        log.trace("doc [$article.shortId] already exists in index")
+                        log.trace("doc [$article.shortId] already exists in index - skipping")
                     }
                 } else {
                     log.trace("empty article found [$url]")
