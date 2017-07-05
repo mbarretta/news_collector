@@ -27,7 +27,8 @@ class NewsCollector {
                     section       : [type: "keyword"],
                     text          : [type: "text"],
                     entityObjects : [type: "nested"],
-                    entityNames   : [type: "text"]
+                    entityNames   : [type: "text"],
+                    locations     : [type: "geo_point"]
                 ]
             ]
         ]

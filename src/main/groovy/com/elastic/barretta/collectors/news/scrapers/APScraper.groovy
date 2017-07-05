@@ -1,6 +1,7 @@
 package com.elastic.barretta.collectors.news.scrapers
 
 import com.elastic.barretta.collectors.news.ESClient
+import com.elastic.barretta.collectors.news.Enricher
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
 
@@ -14,6 +15,8 @@ class APScraper {
 
         def results = [:]
         final def AP_URL = "https://afs-prod.appspot.com/api/v2/feed/tag?tags="
+
+        def enricher = new Enricher()
 
         //fetch most recent article "cards" from each section
         [
@@ -51,8 +54,8 @@ class APScraper {
                     ]
 
                     //filter duplicates
-                    if (!client.docExists("shortId", article.shortId)) {
-                        client.postDoc(doc)
+                    if (!client.docExists("url.keyword", article.localLinkUrl)) {
+                        client.postDoc(enricher.enrich(doc))
                         posted++
 
                     } else {

@@ -1,6 +1,7 @@
 package com.elastic.barretta.collectors.news.scrapers
 
 import com.elastic.barretta.collectors.news.ESClient
+import com.elastic.barretta.collectors.news.Enricher
 import de.l3s.boilerpipe.extractors.ArticleExtractor
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
@@ -18,6 +19,7 @@ class NewsAPIScraper {
             log.error("no API key set for NewsAPI - skipping")
             return
         }
+        def enricher = new Enricher()
 
         def results = [:]
         [
@@ -65,20 +67,21 @@ class NewsAPIScraper {
                     ]
 
                     //if it's new, write it
-                    if (!client.docExists("url.keyword", article.url)) {
-                        client.postDoc(doc)
+                    if (!client.docExists("url.keyword", doc.url)) {
+                        client.postDoc(enricher.enrich(doc))
                         posted++
                     }
 
                     //else, decide if we should update it or ignore it
                     else {
                         log.trace("doc [$article.url] already exists in index")
-                        def existingDoc = client.getDocByUniqueField("url.keyword", article.url)
+                        def existingDoc = client.getDocByUniqueField("url.keyword", doc.url)
 
                         //if the doc has a new published date, we'll assume content was changed or added: we'll be doing an update
                         if (existingDoc._source.date_published != doc.date_published) {
                             log.trace("...updating due to newer timestamp [$doc.date_published] vs [$existingDoc._source.date_published]")
-                            client.updateDoc(existingDoc._id, doc)
+                            client.updateDoc(existingDoc._id, enricher.enrich(doc))
+                            posted++
                         }
                     }
                 }

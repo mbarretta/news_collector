@@ -1,9 +1,9 @@
 package com.elastic.barretta.collectors.news.lambda
 
-import com.elastic.barretta.collectors.news.NewsCollector
-import com.elastic.barretta.collectors.news.ESClient
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
+import com.elastic.barretta.collectors.news.ESClient
+import com.elastic.barretta.collectors.news.NewsCollector
 import groovy.json.JsonOutput
 
 /**
