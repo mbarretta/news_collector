@@ -17,6 +17,7 @@ class Enricher {
                     rosette = new RosetteApiClient(config.enrichment.rosetteApi as RosetteApiClient.Config)
                     rosette.test()
                 } catch (e) {
+                    rosette = null
                     log.warn("unable to establish connection to Rosette API")
                 }
             } else {
