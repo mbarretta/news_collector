@@ -57,7 +57,7 @@ class ESClient {
                 }
             }
         } else {
-            log.warn("index [$config.index] already exists")
+            log.info("index [$config.index] already exists")
         }
     }
 
@@ -74,15 +74,15 @@ class ESClient {
     }
 
     def postDoc(Map content, index = config.index, type = config.type) {
-//        client.post(path: "/$index/$type") {
-//            json content
-//        }
+        client.post(path: "/$index/$type") {
+            json content
+        }
     }
 
     def updateDoc(id, Map content, index = config.index, type = config.type) {
-//        client.put(path:"/$index/$type/$id") {
-//            json content
-//        }
+        client.put(path:"/$index/$type/$id") {
+            json content
+        }
     }
 
     def docExists(String field, String value, String index = config.index, String type = config.type) {
