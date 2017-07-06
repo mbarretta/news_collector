@@ -1,5 +1,5 @@
 group 'com.elastic.barretta'
-version '1.3.0'
+version '1.3.1'
 
 //gives us the shadowJar task to build an uberjar for AWS Lambda
 buildscript {
@@ -24,7 +24,7 @@ repositories {
 
 dependencies {
     compile(
-        'com.elastic.barretta:enrichment-rosette:0.1',
+        'com.elastic.barretta:clients-rosette:0.1',
         'com.syncthemall:boilerpipe:1.2.2',
         'commons-cli:commons-cli:1.2',
         'org.codehaus.groovy:groovy-all:2.4.11',

@@ -5,8 +5,20 @@ es {
 //    pass = "changeme"
 }
 
+/* uncomment to enable fetching from News API - also, get a key
 newsApi {
-//    key = ""
+    key = ""
+}
+*/
+
+enrichment {
+
+    /* uncomment to enable Rosette API entity/location extraction
+    rosetteApi {
+        url = "http://localhost:8181/rest/v1"
+        key = ""
+    }
+    */
 }
 
 //clean = true

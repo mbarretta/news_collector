@@ -1,5 +1,5 @@
 # News Collector
-Fetch top news from AP and [NewsAPI](https://newsapi.org) into Elasticsearch
+Fetch top news from AP and [NewsAPI](https://newsapi.org) into Elasticsearch. Optionally, you can enrich the data with entity and location information extracted via the [Rosette API](https://developer.rosette.com/)
 
 ## Config
 You have a two main options: CLI args and/or a `properties.groovy` (create your own via the supplied example in `src/main/resources`). There are also defaults defined in `NewsCollector.groovy` ...probably should just remove those and use `properties.groovy` as the default property repo.
@@ -36,9 +36,15 @@ Support for AWS Lambda is available by building an uber-jar (via [shadowJar](htt
         "index": "news",
         "user": "elastic",
         "pass": "changeme"
-    }
+    },
     "newsApi": {
         "key": "mykey"
+    },
+    "enrichment": {
+        "rosetteApi": {
+            "url": "http://localhost:8181/rest/v1",
+            "key": "mykey"
+        }
     }
     "clean": "false" //or true!
  }

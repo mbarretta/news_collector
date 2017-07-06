@@ -11,11 +11,19 @@ class Enricher {
     Enricher() {
         def config = new ConfigSlurper().parse(this.class.classLoader.getResource("properties.groovy"))
 
-        try {
-            rosette = new RosetteApiClient(config.rosetteApi as RosetteApiClient.Config)
-            rosette.test()
-        } catch (e) {
-            log.warn("unable to establish connection to Rosette API")
+        if (config.enrichment) {
+            if (config.enrichment.rosetteApi) {
+                try {
+                    rosette = new RosetteApiClient(config.enrichment.rosetteApi as RosetteApiClient.Config)
+                    rosette.test()
+                } catch (e) {
+                    log.warn("unable to establish connection to Rosette API")
+                }
+            } else {
+                log.info("Rosette API config is not present - skipping init")
+            }
+        } else {
+            log.warn("missing enrichment{} configuration")
         }
     }
 
