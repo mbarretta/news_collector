@@ -8,6 +8,32 @@ es {
 /* uncomment to enable fetching from News API - also, get a key
 newsApi {
     key = ""
+    sources = [
+        "al-jazeera-english",
+        "ars-technica",
+        "associated-press",
+        "bbc-news",
+        "bbc-sport",
+        "bloomberg",
+        "business-insider",
+        "cnbc",
+        "cnn",
+        "financial-times",
+        "google-news",
+        "hacker-news",
+        "newsweek",
+        "new-york-magazine",
+        "reuters",
+        "techcrunch",
+        "the-economist",
+        "the-guardian-uk",
+        "the-new-york-times",
+        "the-times-of-india",
+        "the-wall-street-journal",
+        "the-washington-post",
+        "time",
+        "usa-today"
+    ]
 }
 */
 
@@ -16,7 +42,7 @@ enrichment {
     /* uncomment to enable Rosette API entity/location extraction
     rosetteApi {
         url = "http://localhost:8181/rest/v1"
-        key = ""
+        key = "<key>"
     }
     */
 }

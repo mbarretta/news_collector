@@ -2,6 +2,7 @@ package com.elastic.barretta.collectors.news
 
 import com.elastic.barretta.collectors.news.scrapers.APScraper
 import com.elastic.barretta.collectors.news.scrapers.NewsAPIScraper
+import groovy.json.JsonSlurper
 
 /**
  * Main class
@@ -9,44 +10,26 @@ import com.elastic.barretta.collectors.news.scrapers.NewsAPIScraper
 class NewsCollector {
 
     static class Config {
-        final static DEFAULT_ES_URL = "http://localhost:9200"
-        final static DEFAULT_ES_INDEX = "news"
-        final static DEFAULT_ES_USER = "elastic"
-        final static DEFAULT_ES_PASS = "changeme"
-        final static DEFAULT_ES_TYPE = "doc"
-
-        final static ES_MAPPING = [
-            (DEFAULT_ES_TYPE): [
-                properties: [
-                    date_published: [type: "date", format: "yyyy-MM-dd HH:mm:ss||yyyy-MM-dd'T'HH:mm:ssZ||yyyy-MM-dd'T'HH:mm:ss.SSSZ"],
-                    title         : [type: "text"],
-                    shortId       : [type: "keyword"],
-                    url           : [type: "text", fields: [keyword: [type: "keyword", ignore_above: 256]]],
-                    byline        : [type: "text"],
-                    source        : [type: "keyword"],
-                    section       : [type: "keyword"],
-                    text          : [type: "text"],
-                    entityObjects : [type: "nested", properties: 
-                        [count: [type: "integer"], id: [type: "keyword"], type: [type: "keyword"], "name": [type: "text"]]
-                    ],
-                    entityNames   : [type: "text"],
-                    locations     : [type: "geo_point"]
-                ]
-            ]
-        ]
+        final static def DEFAULT_ES_URL = "http://localhost:9200"
+        final static def DEFAULT_ES_INDEX = "news"
+        final static def DEFAULT_ES_USER = "elastic"
+        final static def DEFAULT_ES_PASS = "changeme"
+        final static def DEFAULT_ES_TYPE = "doc"
+        final static def DEFAULT_ENTITY_ES_INDEX = "news_entity_sentiment"
 
         ESClient.Config es = new ESClient.Config()
         NewsAPIScraper.Config newsApi = new NewsAPIScraper.Config()
         boolean clean = false
     }
 
+    //TODO: this whole thing is probably OBE and should either be dropped or rewritten to handle the expanded functionality
     static void main(String[] args) {
         def cli = new CliBuilder(usage: "APNewCollector")
         cli.esUrl(args: 1, argName: "URL", "URL for ES [default: $Config.DEFAULT_ES_URL]")
         cli.esIndex(args: 1, argName: "index", "ES index name [default: $Config.DEFAULT_ES_INDEX]")
         cli.esUser(args: 1, argName: "user", "username for ES authentication [default: $Config.DEFAULT_ES_USER]")
         cli.esPass(args: 1, argName: "pass", "password for ES authentication [default: $Config.DEFAULT_ES_PASS]")
-        cli.newsApiKey(args:1, argName: "apiKey", "key for newsapi.org")
+        cli.newsApiKey(args: 1, argName: "apiKey", "key for newsapi.org")
         cli.clean("drop and build the ES index")
         cli.help("print this message")
         def options = cli.parse(args)
@@ -59,6 +42,11 @@ class NewsCollector {
         run(doConfig(options))
     }
 
+    /**
+     * do it
+     * @param config config map
+     * @return map with some result info
+     */
     static def run(Config config) {
         def client = new ESClient(config.es)
 
@@ -72,11 +60,22 @@ class NewsCollector {
         return results
     }
 
+    /**
+     * drop indices if asked, but always try and create indices for news and entity sentiment from mappings defined in /resources
+     * @param client ES client
+     * @param clean to clean(drop indices) or not to clean
+     */
     private static def prepESIndex(ESClient client, boolean clean) {
         if (clean) {
-            client.deleteIndex()
+            client.deleteIndex(Config.DEFAULT_ES_INDEX)
+            client.deleteIndex(Config.DEFAULT_ENTITY_ES_INDEX)
         }
-        client.createIndex(Config.ES_MAPPING)
+
+        def newsMapping = new JsonSlurper().parse(this.classLoader.getResource("news_mapping.json")) as Map
+        def entitySentimentMapping = new JsonSlurper().parse(this.classLoader.getResource("entity_sentiment_mapping.json")) as Map
+
+        client.createIndex(newsMapping, Config.DEFAULT_ES_INDEX)
+        client.createIndex(entitySentimentMapping, Config.DEFAULT_ENTITY_ES_INDEX)
     }
 
     /**
@@ -99,6 +98,7 @@ class NewsCollector {
         }
 
         appConfig.newsApi.key = cliConfig.newsApiKey ?: propertyConfig.newsApi.key
+        appConfig.newsApi.sources = propertyConfig.newsApi.sources
         appConfig.clean = cliConfig.clean ?: propertyConfig.clean ?: false
         appConfig.es = esConfig
         return appConfig

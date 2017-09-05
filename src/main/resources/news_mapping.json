@@ -1,0 +1,147 @@
+{
+  "settings": {
+    "index": {
+      "number_of_shards": 1,
+      "number_of_replicas": 1
+    }
+  },
+  "mappings": {
+    "queries": {
+      "properties": {
+        "query": {
+          "type": "percolator"
+        }
+      }
+    },
+    "doc": {
+      "properties": {
+        "byline": {
+          "type": "text"
+        },
+        "date_published": {
+          "type": "date",
+          "format": "yyyy-MM-dd HH:mm:ss||yyyy-MM-dd'T'HH:mm:ssZ||yyyy-MM-dd'T'HH:mm:ss.SSSZ||yyyy-MM-dd'T'HH:mm:ss"
+        },
+        "entityLocations": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "entityNames": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "entityObjects": {
+          "type": "nested",
+          "properties": {
+            "count": {
+              "type": "integer"
+            },
+            "id": {
+              "type": "keyword"
+            },
+            "name": {
+              "type": "text"
+            },
+            "sentimentConfidence": {
+              "type": "float"
+            },
+            "sentimentLabel": {
+              "type": "keyword"
+            },
+            "type": {
+              "type": "keyword"
+            }
+          }
+        },
+        "entityOrgs": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "entityPeople": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "entityResolvedLocations": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "entityResolvedOrgs": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "entityResolvedPeople": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "locations": {
+          "type": "geo_point"
+        },
+        "section": {
+          "type": "keyword"
+        },
+        "sentimentConfidence": {
+          "type": "float"
+        },
+        "sentimentLabel": {
+          "type": "keyword"
+        },
+        "shortId": {
+          "type": "keyword"
+        },
+        "source": {
+          "type": "keyword"
+        },
+        "text": {
+          "type": "text"
+        },
+        "title": {
+          "type": "text"
+        },
+        "url": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        }
+      }
+    }
+  }
+}

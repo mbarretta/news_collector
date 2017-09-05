@@ -1,0 +1,73 @@
+{
+  "trigger": {
+    "schedule": {
+      "interval": "1d"
+    }
+  },
+  "input": {
+    "search": {
+      "request": {
+        "search_type": "query_then_fetch",
+        "indices": [
+          "news"
+        ],
+        "types": [
+          "doc"
+        ],
+        "body": {
+          "query": {
+            "bool": {
+              "must": {
+                "match": {
+                  "entityNames": "Taylor Swift"
+                }
+              },
+              "filter": {
+                "range": {
+                  "date_published": {
+                    "gte": "now-1d"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "condition": {
+    "compare": {
+      "ctx.payload.hits.total": {
+        "gte": 0
+      }
+    }
+  },
+  "actions": {
+    "my-logging-action": {
+      "logging": {
+        "level": "info",
+        "text": "Swift Alert! She's been mentioned {{ctx.payload.hits.total}} times in the past day"
+      }
+    },
+    "email_administrator": {
+      "email": {
+        "profile": "standard",
+        "attachments": {
+          "attached_data": {
+            "data": {
+              "format": "json"
+            }
+          }
+        },
+        "priority": "high",
+        "to": [
+          "mike.barretta+demo@elastic.co"
+        ],
+        "subject": "Taylor's in teh news!1!!1",
+        "body": {
+          "text": "...though only {{ctx.payload.hits.total}} times in the past 24 hours"
+        }
+      }
+    }
+  }
+}

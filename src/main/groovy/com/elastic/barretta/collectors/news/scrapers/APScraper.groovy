@@ -2,6 +2,7 @@ package com.elastic.barretta.collectors.news.scrapers
 
 import com.elastic.barretta.collectors.news.ESClient
 import com.elastic.barretta.collectors.news.Enricher
+import com.elastic.barretta.collectors.news.Utils
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
 
@@ -53,13 +54,15 @@ class APScraper {
                         text          : article.storyHTML.replaceAll(/<.*?>/, "").replaceAll(/\s{2,}/, " ")
                     ]
 
-                    //filter duplicates
-                    if (!client.docExists("url.keyword", article.localLinkUrl)) {
-                        client.postDoc(enricher.enrich(doc))
+                    //filter empties and duplicates
+                    if (doc.text && !doc.text.trim().isEmpty() &&
+                        !client.docExists("url.keyword", article.localLinkUrl) && !client.docExists("shortId", article.shortId))
+                    {
+                        def newId = client.postDoc(enricher.enrich(doc))
+                        Utils.writeEntitySentimentsToOwnIndex(newId, doc, client)
                         posted++
-
                     } else {
-                        log.trace("doc [$article.shortId] already exists in index - skipping")
+                        log.trace("doc [$article.shortId] already exists in index or has no body text - skipping")
                     }
                 } else {
                     log.trace("empty article found [$url]")
