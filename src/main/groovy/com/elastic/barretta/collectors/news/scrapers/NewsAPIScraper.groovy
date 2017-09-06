@@ -15,16 +15,25 @@ class NewsAPIScraper {
     static class Config {
         String key
         List sources = []
+
+
+        @Override
+        public String toString() {
+            return "Config{" +
+                "key='" + key + '\'' +
+                ", sources=" + sources +
+                '}';
+        }
     }
 
     static def scrape(Config config, ESClient client) {
         if (!config.key) {
             log.error("no API `key` set for NewsAPI - skipping")
-            return
+            return [:]
         }
         if (!config.sources || config.sources.isEmpty()) {
             log.error("no `sources` defined for NewsAPI - skipping")
-            return
+            return [:]
         }
 
         def enricher = new Enricher()

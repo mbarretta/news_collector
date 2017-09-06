@@ -3,10 +3,12 @@ package com.elastic.barretta.collectors.news
 import com.elastic.barretta.collectors.news.scrapers.APScraper
 import com.elastic.barretta.collectors.news.scrapers.NewsAPIScraper
 import groovy.json.JsonSlurper
+import groovy.util.logging.Slf4j
 
 /**
  * Main class
  */
+@Slf4j
 class NewsCollector {
 
     static class Config {
@@ -20,6 +22,16 @@ class NewsCollector {
         ESClient.Config es = new ESClient.Config()
         NewsAPIScraper.Config newsApi = new NewsAPIScraper.Config()
         boolean clean = false
+
+
+        @Override
+        public String toString() {
+            return "Config{" +
+                "es=" + es +
+                ", newsApi=" + newsApi +
+                ", clean=" + clean +
+                '}';
+        }
     }
 
     //TODO: this whole thing is probably OBE and should either be dropped or rewritten to handle the expanded functionality
@@ -48,6 +60,7 @@ class NewsCollector {
      * @return map with some result info
      */
     static def run(Config config) {
+        log.info("running with config: [$config]")
         def client = new ESClient(config.es)
 
         prepESIndex(client, config.clean)
@@ -87,6 +100,7 @@ class NewsCollector {
     static def doConfig(cliConfig) {
         def appConfig = new Config()
         def esConfig = new ESClient.Config()
+        def newsApiConfig = new NewsAPIScraper.Config()
         def propertyConfig = new ConfigSlurper().parse(this.classLoader.getResource("properties.groovy"))
 
         esConfig.with {
@@ -96,11 +110,14 @@ class NewsCollector {
             user = cliConfig.esUser ?: propertyConfig.es.user ?: Config.DEFAULT_ES_USER
             pass = cliConfig.esPass ?: propertyConfig.es.pass ?: Config.DEFAULT_ES_PASS
         }
+        newsApiConfig.with {
+            key = propertyConfig.newsApi.key
+            sources = propertyConfig.newsApi.sources ?: []
+        }
 
-        appConfig.newsApi.key = cliConfig.newsApiKey ?: propertyConfig.newsApi.key
-        appConfig.newsApi.sources = propertyConfig.newsApi.sources
         appConfig.clean = cliConfig.clean ?: propertyConfig.clean ?: false
         appConfig.es = esConfig
+        appConfig.newsApi = newsApiConfig
         return appConfig
     }
 }

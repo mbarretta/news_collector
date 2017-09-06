@@ -90,7 +90,7 @@ class Enricher {
                         geo = geo.value[0].mainsnak.datavalue.value
                         doc.locations << [lat: geo.latitude, lon: geo.longitude]
                         doc.entityResolvedLocations << it.normalized
-                        doc.locationObjects << [name: it.normalized, geo: [lat: geo.latitude, lon: geo.longitude]]
+                        doc.locationObjects << [name: it.normalized, geo: [lat: String.valueOf(geo.latitude), lon: String.valueOf(geo.longitude)]]
                     }
                 }
             }
