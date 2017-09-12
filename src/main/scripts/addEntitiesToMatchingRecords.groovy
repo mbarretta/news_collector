@@ -1,5 +1,5 @@
-import com.elastic.barretta.collectors.news.ESClient
-import com.elastic.barretta.collectors.news.Enricher
+import com.elastic.barretta.news_analysis.ESClient
+import com.elastic.barretta.news_analysis.Enricher
 
 config = new ConfigSlurper().parse(this.class.getResource("properties.groovy"))
 esClient = new ESClient(config.es as ESClient.Config)

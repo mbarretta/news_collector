@@ -1,10 +1,10 @@
-package com.elastic.barretta.collectors.news.lambda
+package com.elastic.barretta.news_analysis.lambda
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
-import com.elastic.barretta.collectors.news.ESClient
-import com.elastic.barretta.collectors.news.NewsCollector
-import com.elastic.barretta.collectors.news.scrapers.NewsAPIScraper
+import com.elastic.barretta.news_analysis.ESClient
+import com.elastic.barretta.news_analysis.NewsCollector
+import com.elastic.barretta.news_analysis.scrapers.NewsAPIScraper
 import groovy.json.JsonOutput
 
 /**
@@ -18,11 +18,11 @@ class NewsCollectorLambda implements RequestHandler<NewsCollector.Config, String
         def propertyConfig = new ConfigSlurper().parse(this.class.classLoader.getResource("properties.groovy"))
 
         esConfig.with {
-            url = request.es.url ?: propertyConfig.es.url ?: NewsCollector.Config.DEFAULT_ES_URL
-            index = request.es.url ?: propertyConfig.es.index ?: NewsCollector.Config.DEFAULT_ES_INDEX
-            type = NewsCollector.Config.DEFAULT_ES_TYPE
-            user = request.es.user ?: propertyConfig.es.user ?: NewsCollector.Config.DEFAULT_ES_USER
-            pass = request.es.pass ?: propertyConfig.es.pass ?: NewsCollector.Config.DEFAULT_ES_PASS
+            url = request.es.url ?: propertyConfig.es.url ?: NewsCollector.DEFAULT_ES_URL
+            index = request.es.url ?: propertyConfig.es.index ?: NewsCollector.DEFAULT_ES_INDEX
+            type = NewsCollector.DEFAULT_ES_TYPE
+            user = request.es.user ?: propertyConfig.es.user ?: NewsCollector.DEFAULT_ES_USER
+            pass = request.es.pass ?: propertyConfig.es.pass ?: NewsCollector.DEFAULT_ES_PASS
         }
         newsApiConfig.with {
             key = propertyConfig.newsApi.key

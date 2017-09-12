@@ -1,0 +1,77 @@
+{
+  "trigger": {
+    "schedule": {
+      "interval": "1d"
+    }
+  },
+  "input": {
+    "search": {
+      "request": {
+        "search_type": "query_then_fetch",
+        "indices": [
+          "news_entity_momentum"
+        ],
+        "types": [],
+        "body": {
+          "size": 10,
+          "query": {
+            "range": {
+              "date": {
+                "gte": "now-1d/d",
+                "lte": "now-1d/d"
+              }
+            }
+          },
+          "sort": {
+            "score": "desc"
+          }
+        }
+      }
+    }
+  },
+  "condition": {
+    "always": {}
+  },
+  "actions": {
+    "notify-slack": {
+      "slack": {
+        "account": "sa",
+        "message": {
+          "from": "sa_news_collector",
+          "to": [
+            "@barretta"
+          ],
+          "text": "*Daily News Momentum Report*\nYesterday's top 10 trending people:",
+          "dynamic_attachments": {
+            "list_path": "ctx.payload.hits",
+            "attachment_template": {
+              "fields": [
+                {
+                  "title": "Name",
+                  "value": "{{_source.name}}",
+                  "short": true
+                },
+                {
+                  "title": "Score",
+                  "value": "{{_source.score}}",
+                  "short": true
+                },
+                {
+                  "title": "More Info",
+                  "value": "* <http://www.bing.com/news/search?q={{_source.name}}|Bing News>\n\r* <https://354107102f9fa46fd4bb9584104bde87.us-east-1.aws.found.io/app/kibana#/dashboard/4dcd35a0-6723-11e7-a0ad-111eb1f9c02e?_g=(time:(from:now-7d,to:now))&_a=(query:(query_string:(query:'entityResolvedPeople.keyword:{{_source.name}}')))|Kibana Dashboard>",
+                  "short": false
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "transform": {
+    "script": {
+      "inline": "ctx.payload.hits.hits.each( hit -> hit._source.score = Math.round(hit._source.score * 100.0) / 100.0 ); return ctx.payload.hits",
+      "lang": "painless"
+    }
+  }
+}

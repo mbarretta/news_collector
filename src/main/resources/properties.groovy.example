@@ -1,6 +1,8 @@
 es {
     url = "http://localhost:9200"
     index = "news"
+    entity_sentiment_index = "news_entity_sentiment"
+    entity_momentum_index = "news_entity_momentum"
 //    user = "elastic"
 //    pass = "changeme"
 }

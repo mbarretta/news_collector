@@ -1,6 +1,8 @@
-package com.elastic.barretta.collectors.news
+package com.elastic.barretta.news_analysis
 
 class Utils {
+    // todo: this is bad becasue it doesn't use the app config's sentiment_index value - might need to create a static singleton for
+    // the config so it can be reached everywhere
     static def writeEntitySentimentsToOwnIndex(String id, Map doc, ESClient client) {
         def date = doc.date_published
         doc.entityObjects?.each {
@@ -16,7 +18,7 @@ class Utils {
                         articleId : id,
                         source    : it.source
                     ],
-                    NewsCollector.Config.DEFAULT_ENTITY_ES_INDEX
+                    NewsCollector.DEFAULT_ENTITY_ES_INDEX
                 )
             }
         }

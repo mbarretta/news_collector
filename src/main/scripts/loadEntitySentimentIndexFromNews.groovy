@@ -1,15 +1,15 @@
-import com.elastic.barretta.collectors.news.ESClient
-import com.elastic.barretta.collectors.news.NewsCollector
-import com.elastic.barretta.collectors.news.Utils
+import com.elastic.barretta.news_analysis.ESClient
+import com.elastic.barretta.news_analysis.NewsCollector
+import com.elastic.barretta.news_analysis.Utils
 import groovy.json.JsonSlurper
 
 config = new ConfigSlurper().parse(this.class.getResource("properties.groovy"))
 esClient = new ESClient(config.es as ESClient.Config)
 
-def entitySentimentMapping = new JsonSlurper().parse(this.classLoader.getResource("entity_sentiment_mapping.json")) as Map
+def entitySentimentMapping = new JsonSlurper().parse(this.classLoader.getResource("sentiment_mapping.json")) as Map
 
-esClient.deleteIndex(NewsCollector.Config.DEFAULT_ENTITY_ES_INDEX)
-esClient.createIndex(entitySentimentMapping, NewsCollector.Config.DEFAULT_ENTITY_ES_INDEX)
+esClient.deleteIndex(NewsCollector.DEFAULT_ENTITY_ES_INDEX)
+esClient.createIndex(entitySentimentMapping, NewsCollector.DEFAULT_ENTITY_ES_INDEX)
 
 query = [
    match_all: [boost: 1]

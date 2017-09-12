@@ -1,8 +1,8 @@
-package com.elastic.barretta.collectors.news.scrapers
+package com.elastic.barretta.news_analysis.scrapers
 
-import com.elastic.barretta.collectors.news.ESClient
-import com.elastic.barretta.collectors.news.Enricher
-import com.elastic.barretta.collectors.news.Utils
+import com.elastic.barretta.news_analysis.ESClient
+import com.elastic.barretta.news_analysis.Enricher
+import com.elastic.barretta.news_analysis.Utils
 import de.l3s.boilerpipe.extractors.ArticleExtractor
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j

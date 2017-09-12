@@ -1,4 +1,4 @@
-package com.elastic.barretta.collectors.news
+package com.elastic.barretta.news_analysis
 
 import com.elastic.barretta.analytics.rosette.RosetteApiClient
 import groovy.json.JsonSlurper
@@ -17,7 +17,7 @@ class Enricher {
                     rosette = new RosetteApiClient(config.enrichment.rosetteApi as RosetteApiClient.Config)
                 } catch (e) {
                     rosette = null
-                    log.warn("unable to establish connecti on to Rosette API [${config.enrichment.rosetteApi}]")
+                    log.warn("unable to establish connection to Rosette API [${config.enrichment.rosetteApi}]")
                 }
             } else {
                 log.info("Rosette API config is not present - skipping init")
@@ -115,5 +115,77 @@ class Enricher {
             }
         }
         return doc
+    }
+
+    static def calculateMomentum(ESClient client, String index = NewsCollector.DEFAULT_ES_INDEX) {
+        def dateString = new Date().format("yyyy-MM-dd")
+
+        def body = [
+            query: [
+                range: [
+                    date_published: [
+                        gte: "$dateString 11:11:11||-3d/d",
+                        lte: "$dateString 11:11:11||-1d/d"
+                    ]
+                ]
+            ],
+            aggs: [
+                daily: [
+                    date_histogram: [
+                        field   : "date_published",
+                        interval: "day"
+                    ],
+                    aggs: [
+                        entities: [
+                            terms: [
+                                field: "entityResolvedPeople.keyword",
+                                size : 10000
+
+                            ],
+                            aggs: [
+                                sources: [
+                                    terms: [
+                                        field: "source",
+                                        size : 5
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ]
+        def response = client.post(path: "$index/_search?size=0") {
+            json body
+        }
+
+        def data = [:].withDefault { 0 as double }
+        def buckets = response.json.aggregations.daily.buckets
+
+        // trying to do ([1]/[0] + [2]/[1]) * min( (2/3) * numSources, 2)
+        // intuition is to look at the "average" change in the mentions for this entity over the past three days and then
+        // increase that score to reward those (up to 2x) who show up in more than one source - reward maxes out after three sources
+        def sourceCount = buckets.entities.buckets.sources.buckets.collect { it.key }.flatten().unique().size()
+        buckets.eachWithIndex { bucket, i ->
+            //look at all three buckets and do the things
+            bucket.entities.buckets.each { entity ->
+                if (i < 2) {
+                    def match = buckets[i + 1].entities.buckets.find { it.key == entity.key }
+                    def diff = (match) ? match.doc_count / entity.doc_count : entity.doc_count
+                    data[entity.key] += (diff * Math.min((2/3) * sourceCount, 2 as double))
+                }
+
+                // can't reach ahead to the next bucket anymore...
+                else {
+
+                    // if we're in the 3rd bucket and haven't seen this guy yet, throw him in
+                    // otherwise he's already been considered during last loop
+                    if (!data.containsKey(entity.key)) {
+                        data[entity.key] += entity.doc_count
+                    }
+                }
+            }
+        }
+        return data
     }
 }

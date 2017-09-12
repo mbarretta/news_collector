@@ -1,4 +1,4 @@
-package com.elastic.barretta.collectors.news
+package com.elastic.barretta.news_analysis
 
 import groovy.json.JsonOutput
 import groovy.util.logging.Slf4j
@@ -178,6 +178,28 @@ class ESClient {
                 log.error("detail [\n${JsonOutput.prettyPrint(new String(e.response.data))}\n]")
             }
         }
+    }
+
+    def bulkInsert(List<Map> records, String index = config.index, String ttype = config.type) {
+        def post = new StringBuilder()
+        def recordCount = records.size()
+
+        records.each { record ->
+            post.append('{"index":{}}').append("\n").append(JsonOutput.toJson(record)).append("\n")
+        }
+        try {
+            client.put(path: "/$index/$ttype/_bulk") {
+                type "application/x-ndjson"
+                text post.toString()
+            }
+        } catch (RESTClientException e) {
+            log.error("error running bulk insert [$e.cause]")
+            if (e.response.statusCode == 400) {
+                log.error("detail [\n${JsonOutput.prettyPrint(new String(e.response.data))}\n]")
+            }
+            recordCount = 0
+        }
+        return recordCount
     }
 
     private testClient() {

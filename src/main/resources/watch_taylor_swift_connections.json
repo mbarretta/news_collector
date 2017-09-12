@@ -1,0 +1,83 @@
+{
+  "trigger": {
+    "schedule": {
+      "interval": "1d"
+    }
+  },
+  "input": {
+    "chain": {
+      "inputs": [
+        {
+          "all_previous": {
+            "http": {
+              "request": {
+                "scheme": "https",
+                "host": "07b49e0aa73d320250c94080361f76d5.us-east-1.aws.found.io",
+                "port": 9243,
+                "method": "post",
+                "path": "/news/_xpack/_graph/_explore",
+                "params": {},
+                "headers": {},
+                "auth": {
+                  "basic": {
+                    "username": "elastic",
+                    "password": "a08KbLCCWhr0J9IBh97ULfKX"
+                  }
+                },
+                "body": "{\"controls\": {\"use_significance\": false,\"sample_size\": 20000,\"timeout\": 5000},\"query\": {\"bool\": {\"filter\": {\"range\": {\"date_published\": {\"lt\": \"now-1d/d\"}}},\"must\": [{\"match\": {\"entityResolvedPeople.keyword\": \"Taylor Swift\"}}],\"boost\":1}},\"vertices\": [{\"field\": \"entityResolvedPeople.keyword\",\"min_doc_count\": 1}],\"connections\": {\"vertices\": [{\"field\": \"entityResolvedPeople.keyword\",\"size\": 5000,\"min_doc_count\": 1,\"exclude\": [\"Taylor Swift\"]}]}}"
+              }
+            }
+          }
+        },
+        {
+          "yesterday": {
+            "http": {
+              "request": {
+                "scheme": "https",
+                "host": "07b49e0aa73d320250c94080361f76d5.us-east-1.aws.found.io",
+                "port": 9243,
+                "method": "post",
+                "path": "/news/_xpack/_graph/_explore",
+                "params": {},
+                "headers": {},
+                "auth": {
+                  "basic": {
+                    "username": "elastic",
+                    "password": "a08KbLCCWhr0J9IBh97ULfKX"
+                  }
+                },
+                "body": "{\"controls\": {\"use_significance\": false,\"sample_size\": 20000,\"timeout\": 5000},\"query\": {\"bool\": {\"filter\": {\"range\": {\"date_published\": {\"gte\": \"now-1d/d\",\"lte\":\"now-1d/d\"}}},\"must\": [{\"match\": {\"entityResolvedPeople.keyword\": \"Taylor Swift\"}}],\"boost\":1}},\"vertices\": [{\"field\": \"entityResolvedPeople.keyword\",\"min_doc_count\": 1}],\"connections\": {\"vertices\": [{\"field\": \"entityResolvedPeople.keyword\",\"size\": 100,\"min_doc_count\": 1,\"exclude\": [\"Taylor Swift\"]}]}}"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "condition": {
+    "script": {
+      "inline": "return !(ctx.payload.all_previous.vertices.collect(v -> v.term).containsAll(ctx.payload.yesterday.vertices.collect(v -> v.term)))",
+      "lang": "painless"
+    }
+  },
+  "actions": {
+    "send_email": {
+      "transform": {
+        "script": {
+          "inline": "def yesterday = ctx.payload.yesterday.vertices.collect(v -> v.term); yesterday.removeAll(ctx.payload.all_previous.vertices.collect(v -> v.term)); return yesterday",
+          "lang": "painless"
+        }
+      },
+      "email": {
+        "profile": "standard",
+        "to": [
+          "mike.barretta@elastic.co"
+        ],
+        "subject": "one step closer to 1 degree of Taylor!!1!",
+        "body": {
+          "html": "Taylor has now been referenced with: <ul>{{#ctx.payload._value}}<li>{{.}}</li>{{/ctx.payload._value}}</ul>"
+        }
+      }
+    }
+  }
+}

@@ -1,4 +1,4 @@
-import com.elastic.barretta.collectors.news.ESClient
+import com.elastic.barretta.news_analysis.ESClient
 
 config = new ConfigSlurper().parse(this.class.getResource("properties.groovy"))
 esClient = new ESClient(config.es as ESClient.Config)

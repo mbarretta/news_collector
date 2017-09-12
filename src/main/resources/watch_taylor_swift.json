@@ -19,13 +19,13 @@
             "bool": {
               "must": {
                 "match": {
-                  "entityNames": "Taylor Swift"
+                  "entityResolvedPeople.keyword": "Taylor Swift"
                 }
               },
               "filter": {
                 "range": {
                   "date_published": {
-                    "gte": "now-1d"
+                    "gte": "now-1d/d"
                   }
                 }
               }
@@ -38,7 +38,7 @@
   "condition": {
     "compare": {
       "ctx.payload.hits.total": {
-        "gte": 0
+        "gt": 0
       }
     }
   },
@@ -46,28 +46,33 @@
     "my-logging-action": {
       "logging": {
         "level": "info",
-        "text": "Swift Alert! She's been mentioned {{ctx.payload.hits.total}} times in the past day"
+        "text": "[Swift Alert!] There are {{ctx.payload.length}} new articles about Ms. Swift since yesterday."
       }
     },
     "email_administrator": {
+      "transform": {
+        "script": {
+          "inline": "return ['hits':ctx.payload._value, 'hit_count': ctx.payload._value.size(), 'over_10_results': ctx.payload._value.size() > 10]",
+          "lang": "painless"
+        }
+      },
       "email": {
         "profile": "standard",
-        "attachments": {
-          "attached_data": {
-            "data": {
-              "format": "json"
-            }
-          }
-        },
         "priority": "high",
         "to": [
-          "mike.barretta+demo@elastic.co"
+          "mike.barretta@elastic.co"
         ],
         "subject": "Taylor's in teh news!1!!1",
         "body": {
-          "text": "...though only {{ctx.payload.hits.total}} times in the past 24 hours"
+          "html": "...though only {{ctx.payload.hit_count}} times in the past 24 hours<br/>{{#ctx.payload.over_10_results}}Top 10 hits:{{/ctx.payload.over_10_results}}<ul>{{#ctx.payload.hits}}<li><a href=\"{{url}}\" target=\"_blank\">{{title}}</a></li>{{/ctx.payload.hits}}</ul>{{#ctx.payload.over_10_hits}}<br/>View the full results <a href=\"https://354107102f9fa46fd4bb9584104bde87.us-east-1.aws.found.io/app/kibana#/discover/7bdb9050-97d3-11e7-b46b-c3858f3f4ea4?_g=(time:(from:now-48h,mode:relative,to:now))&_a=(columns:!(title,url,source),index:news,query:(query_string:(analyze_wildcard:!t,query:'entityResolvedPeople.keyword%3D%22Taylor%20Swift%22')),sort:!(date_published,desc))\">in Kibana</a>{{/ctx.payload.over_10_hits}}<p><a href=\"https://354107102f9fa46fd4bb9584104bde87.us-east-1.aws.found.io/app/kibana#/dashboard/4dcd35a0-6723-11e7-a0ad-111eb1f9c02e?_g=(time:(from:now-30d,mode:quick,to:now))&_a=(query:(query_string:(query:'entityResolvedPeople.keyword%3D%22Taylor%20Swift%22')))\">Taylor's Kibana Dashboard</a>"
         }
       }
+    }
+  },
+  "transform": {
+    "script": {
+      "inline": "return ctx.payload.hits.hits.collect( hit -> ['url': hit._source.url, 'title': hit._source.title])",
+      "lang": "painless"
     }
   }
 }
