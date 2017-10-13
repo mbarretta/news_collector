@@ -1,6 +1,19 @@
 # News Collector
 Fetch top news from AP and [NewsAPI](https://newsapi.org) into Elasticsearch. Optionally, you can enrich the data with entity and location information extracted via the [Rosette API](https://developer.rosette.com/)
 
+There is also code to create an entity "momentum" metric which tries to assign a score to entities everyday based on their change in mentions over the past few days:
+```
+log(avg(M_t)) * min( S / 5, 2) * ( (M_1 / M_0) + (M_2 / M_1) )
+
+where:
+- S = number of sources mentioning the entity during the period
+- M = mentions
+- M_t = total mentions during period
+- M_x = mention for a given day in the period
+```
+
+The intuition is to look at the change in mentions from the start of the period to the end and boost the score in a diminishing way for entities with a lot of mentions during that period, and also boost if those mentions occured across a lot of different sources (10 sources delivers the max 2x boost)
+
 ## Config
 You have a two main options: CLI args and/or a `properties.groovy` (create your own via the supplied example in `src/main/resources`). There are also defaults defined in `NewsCollector.groovy` ...probably should just remove those and use `properties.groovy` as the default property repo.
 
@@ -24,9 +37,9 @@ usage: APNewCollector
 
 ### AWS Lambda
 
-Support for AWS Lambda is available by building an uber-jar (via [shadowJar](https://github.com/johnrengelman/shadow)) and pointing towards `com.elastic.barretta.collectors.news.lambda.NewsCollectorLambda::handleRequest`.
+Support for AWS Lambda is available by building an uber-jar (via [shadowJar](https://github.com/johnrengelman/shadow)) and pointing towards `com.elastic.barretta.news_analysis.lambda.NewsCollectorLambda::handleRequest`.
 
-...yes, that package name is obnoxious, and I probably should change it or remove the vast majority of it
+The entity momentum code can be triggered via Lambda from `com.elastic.barretta.news_analysis.lambda.EntityMomentumLambda::handleRequest`.
 
  As mentioned above, you can configure it via `properties.groovy` on the classpath or by passing in JSON in the form:
 ```
