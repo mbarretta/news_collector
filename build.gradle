@@ -1,5 +1,5 @@
 group 'com.elastic.barretta'
-version '1.6.0'
+version '1.6.1'
 
 //gives us the shadowJar task to build an uberjar for AWS Lambda
 buildscript {
@@ -15,7 +15,7 @@ apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'groovy'
 apply plugin: 'application'
 
-mainClassName = 'com.elastic.barretta.collectors.news.NewsCollector'
+mainClassName = 'com.elastic.barretta.news_analysis.NewsCollector'
 
 task sourcesJar(type: Jar) {
     from sourceSets.main.allSource

@@ -117,8 +117,8 @@ class Enricher {
         return doc
     }
 
-    static def calculateMomentum(ESClient client, String index = NewsCollector.DEFAULT_ES_INDEX) {
-        def dateString = new Date().format("yyyy-MM-dd")
+    static def calculateMomentum(ESClient client, Date date = new Date(), String index = NewsCollector.DEFAULT_ES_INDEX) {
+        def dateString = date.format("yyyy-MM-dd")
 
         def body = [
             query: [
@@ -129,24 +129,25 @@ class Enricher {
                     ]
                 ]
             ],
-            aggs: [
+            aggs : [
                 daily: [
                     date_histogram: [
                         field   : "date_published",
                         interval: "day"
                     ],
-                    aggs: [
+                    aggs          : [
                         entities: [
                             terms: [
-                                field: "entityResolvedPeople.keyword",
+                                field: "entityPeople.keyword",
                                 size : 10000
 
                             ],
-                            aggs: [
+                            aggs : [
                                 sources: [
                                     terms: [
-                                        field: "source",
-                                        size : 5
+                                        field        : "source",
+                                        size         : 50,
+                                        min_doc_count: 1
                                     ]
                                 ]
                             ]
@@ -162,17 +163,19 @@ class Enricher {
         def data = [:].withDefault { 0 as double }
         def buckets = response.json.aggregations.daily.buckets
 
-        // trying to do ([1]/[0] + [2]/[1]) * min( (2/3) * numSources, 2)
-        // intuition is to look at the "average" change in the mentions for this entity over the past three days and then
-        // increase that score to reward those (up to 2x) who show up in more than one source - reward maxes out after three sources
-        def sourceCount = buckets.entities.buckets.sources.buckets.collect { it.key }.flatten().unique().size()
+        // trying to do log(avg())*[1]/[0] + [2]/[1]) * min( (1/5) * numSources, 2)
+        // intuition is to look at the "average" change in the mentions for this entity over the past three days,
+        // adjust it on a log scale to boost score of those with a lot of mentions, and then increase that score to
+        // reward those (up to 2x) who show up in more than one source - reward maxes out after 10 sources
         buckets.eachWithIndex { bucket, i ->
+
             //look at all three buckets and do the things
             bucket.entities.buckets.each { entity ->
+
                 if (i < 2) {
                     def match = buckets[i + 1].entities.buckets.find { it.key == entity.key }
                     def diff = (match) ? match.doc_count / entity.doc_count : entity.doc_count
-                    data[entity.key] += (diff * Math.min((2/3) * sourceCount, 2 as double))
+                    data[entity.key] += diff
                 }
 
                 // can't reach ahead to the next bucket anymore...
@@ -183,6 +186,12 @@ class Enricher {
                     if (!data.containsKey(entity.key)) {
                         data[entity.key] += entity.doc_count
                     }
+
+                    //finish our scoring considering data from all three buckets
+                    def parent = buckets.entities.buckets.flatten().findAll { it.key == entity.key }
+                    def sourceWeight = Math.min(parent.sources.buckets.flatten().size() / 5, 2 as double)
+                    def mentionWeight = Math.log(parent.collect { it.doc_count }.sum() / 3)
+                    data[entity.key] =  sourceWeight * mentionWeight * data[entity.key] as double
                 }
             }
         }

@@ -1,6 +1,11 @@
+import com.elastic.barretta.news_analysis.Enricher
 import com.elastic.barretta.news_analysis.NewsCollector
 import wslite.http.auth.HTTPBasicAuthorization
 import wslite.rest.RESTClient
+
+
+//todo: put in sync with actual momentum code
+
 
 client = new RESTClient("https://07b49e0aa73d320250c94080361f76d5.us-east-1.aws.found.io:9243")
 client.authorization = new HTTPBasicAuthorization("elastic", "a08KbLCCWhr0J9IBh97ULfKX")
@@ -8,6 +13,9 @@ client.authorization = new HTTPBasicAuthorization("elastic", "a08KbLCCWhr0J9IBh9
 date = Calendar.instance
 date.set(2017, 6, 1)
 while (date.before(Calendar.instance)) {
+
+//    Enricher.calculateMomentum(client, date.getTime())
+
     dateString = date.format("yyyy-MM-dd")
     println "$dateString ..."
 
@@ -29,7 +37,7 @@ while (date.before(Calendar.instance)) {
                 aggs: [
                     entities: [
                         terms: [
-                            field: "entityResolvedPeople.keyword",
+                            field: "entityPeople.keyword",
                             size : 10000
 
                         ],
@@ -37,7 +45,7 @@ while (date.before(Calendar.instance)) {
                             sources: [
                                 terms: [
                                     field: "source",
-                                    size : 10
+                                    size : 50
                                 ]
                             ]
                         ]
@@ -61,7 +69,7 @@ while (date.before(Calendar.instance)) {
             if (i < 2) {
                 def match = buckets[i + 1].entities.buckets.find { it.key == entity.key }
                 diff = (match) ? match.doc_count / entity.doc_count : entity.doc_count
-                data[entity.key] += (diff * Math.min((2/3) * sourceCount, 2 as double))
+                data[entity.key] += (diff * Math.min(1/2 * sourceCount, 2 as double))
             }
 
             //can't reach ahead to the next bucket anymore...
