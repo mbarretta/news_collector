@@ -4,6 +4,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.amazonaws.services.lambda.runtime.Context
 import com.elastic.barretta.news_analysis.ESClient
 import com.elastic.barretta.news_analysis.Enricher
+import com.elastic.barretta.news_analysis.EntityMomentum
 import com.elastic.barretta.news_analysis.NewsCollector
 import groovy.util.logging.Slf4j
 
@@ -22,20 +23,7 @@ class EntityMomentumLambda implements RequestHandler<NewsCollector.Config, Strin
         }
 
         def client = new ESClient(request.es)
-        def date = new Date().format("yyyy-MM-dd")
-        def insertedRecords = 0
 
-        //prevent duplicates by looking for data from "today"
-        if (!client.docExists("date", date)) {
-
-            log.info("scoring momentum for [$date]")
-
-            def results = Enricher.calculateMomentum(client)
-            def postList = results.inject([]) { l, k, v ->
-                l << [name: k, score: v, date: date]
-            }
-            insertedRecords = client.bulkInsert(postList)
-        }
-        return insertedRecords
+        return EntityMomentum.run(client)
     }
 }

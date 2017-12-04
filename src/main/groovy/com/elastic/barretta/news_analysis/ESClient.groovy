@@ -37,7 +37,7 @@ class ESClient {
     }
 
     ESClient(Config config) {
-        this.client = new RESTClient(config.url)
+        this.client = new RESTClient(config.url as String)
         this.config = config
         if (config.user) {
             client.authorization = new HTTPBasicAuthorization(config.user, config.pass)
@@ -156,6 +156,7 @@ class ESClient {
                 def asyncMapFunction = mapFunction.async()
 
                 //do first batch
+                log.info("...queuing first batch of [$batchSize]")
                 response.json.hits.hits.collect().each {
                     asyncMapFunction(it as Map)
                 }
@@ -188,6 +189,7 @@ class ESClient {
             post.append('{"index":{}}').append("\n").append(JsonOutput.toJson(record)).append("\n")
         }
         try {
+            log.info("bulk inserting [$recordCount] records to [$index]")
             client.put(path: "/$index/$ttype/_bulk") {
                 type "application/x-ndjson"
                 text post.toString()

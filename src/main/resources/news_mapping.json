@@ -6,13 +6,6 @@
     }
   },
   "mappings": {
-    "queries": {
-      "properties": {
-        "query": {
-          "type": "percolator"
-        }
-      }
-    },
     "doc": {
       "properties": {
         "byline": {
