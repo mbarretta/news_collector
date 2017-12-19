@@ -20,7 +20,7 @@ query = [
                           include: "shortId"
                       ],
                       sort: [[
-                          date_published: [
+                          date: [
                               order: "desc"
                           ]
                       ]]

@@ -1,0 +1,6 @@
+FROM centos:7
+MAINTAINER Mike Barretta <mike.barretta@elastic.co>
+COPY news_collector-${version}-all.jar /usr/share
+
+ENTRYPOINT ["/usr/share/news_collector-${version}-all.jar"]
+CMD

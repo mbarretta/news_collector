@@ -123,7 +123,7 @@ class Enricher {
         def body = [
             query: [
                 range: [
-                    date_published: [
+                    date: [
                         gte: "$dateString 11:11:11||-3d/d",
                         lte: "$dateString 11:11:11||-1d/d"
                     ]
@@ -132,7 +132,7 @@ class Enricher {
             aggs : [
                 daily: [
                     date_histogram: [
-                        field   : "date_published",
+                        field   : "date",
                         interval: "day"
                     ],
                     aggs          : [

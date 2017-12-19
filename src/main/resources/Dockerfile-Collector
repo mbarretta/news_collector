@@ -1,0 +1,8 @@
+FROM centos:7
+MAINTAINER Mike Barretta <mike.barretta@elastic.co>
+
+COPY news_collector-${version}-all.jar /usr/share
+COPY properties.groovy /usr/share
+
+ENTRYPOINT ["/usr/share/news_collector-${version}-all.jar"]
+CMD ["java -jar news_collector-${version}-all.jar", "com.elastic.barretta.news_analysis.NewsCollector"]

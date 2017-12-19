@@ -24,7 +24,7 @@
               },
               "filter": {
                 "range": {
-                  "date_published": {
+                  "date": {
                     "gte": "now-1d/d"
                   }
                 }
@@ -64,7 +64,7 @@
         ],
         "subject": "Taylor's in teh news!1!!1",
         "body": {
-          "html": "...though only {{ctx.payload.hit_count}} times in the past 24 hours<br/>{{#ctx.payload.over_10_results}}Top 10 hits:{{/ctx.payload.over_10_results}}<ul>{{#ctx.payload.hits}}<li><a href=\"{{url}}\" target=\"_blank\">{{title}}</a></li>{{/ctx.payload.hits}}</ul>{{#ctx.payload.over_10_hits}}<br/>View the full results <a href=\"https://354107102f9fa46fd4bb9584104bde87.us-east-1.aws.found.io/app/kibana#/discover/7bdb9050-97d3-11e7-b46b-c3858f3f4ea4?_g=(time:(from:now-48h,mode:relative,to:now))&_a=(columns:!(title,url,source),index:news,query:(query_string:(analyze_wildcard:!t,query:'entityResolvedPeople.keyword%3D%22Taylor%20Swift%22')),sort:!(date_published,desc))\">in Kibana</a>{{/ctx.payload.over_10_hits}}<p><a href=\"https://354107102f9fa46fd4bb9584104bde87.us-east-1.aws.found.io/app/kibana#/dashboard/4dcd35a0-6723-11e7-a0ad-111eb1f9c02e?_g=(time:(from:now-30d,mode:quick,to:now))&_a=(query:(query_string:(query:'entityResolvedPeople.keyword%3D%22Taylor%20Swift%22')))\">Taylor's Kibana Dashboard</a>"
+          "html": "...though only {{ctx.payload.hit_count}} times in the past 24 hours<br/>{{#ctx.payload.over_10_results}}Top 10 hits:{{/ctx.payload.over_10_results}}<ul>{{#ctx.payload.hits}}<li><a href=\"{{url}}\" target=\"_blank\">{{title}}</a></li>{{/ctx.payload.hits}}</ul>{{#ctx.payload.over_10_hits}}<br/>View the full results <a href=\"https://354107102f9fa46fd4bb9584104bde87.us-east-1.aws.found.io/app/kibana#/discover/7bdb9050-97d3-11e7-b46b-c3858f3f4ea4?_g=(time:(from:now-48h,mode:relative,to:now))&_a=(columns:!(title,url,source),index:news,query:(query_string:(analyze_wildcard:!t,query:'entityResolvedPeople.keyword%3D%22Taylor%20Swift%22')),sort:!(date,desc))\">in Kibana</a>{{/ctx.payload.over_10_hits}}<p><a href=\"https://354107102f9fa46fd4bb9584104bde87.us-east-1.aws.found.io/app/kibana#/dashboard/4dcd35a0-6723-11e7-a0ad-111eb1f9c02e?_g=(time:(from:now-30d,mode:quick,to:now))&_a=(query:(query_string:(query:'entityResolvedPeople.keyword%3D%22Taylor%20Swift%22')))\">Taylor's Kibana Dashboard</a>"
         }
       }
     }

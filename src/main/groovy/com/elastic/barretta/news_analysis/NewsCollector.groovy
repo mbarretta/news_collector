@@ -1,5 +1,6 @@
 package com.elastic.barretta.news_analysis
 
+import com.elastic.barretta.clients.S3Client
 import com.elastic.barretta.news_analysis.scrapers.APScraper
 import com.elastic.barretta.news_analysis.scrapers.NewsAPIScraper
 import groovy.json.JsonSlurper
@@ -21,33 +22,47 @@ class NewsCollector {
 
     static class Config {
         ESClient.Config es = new ESClient.Config()
+        S3Client.Config s3 = new S3Client.Config()
         NewsAPIScraper.Config newsApi = new NewsAPIScraper.Config()
+        Archiver.Config archiver = new Archiver.Config()
         boolean clean = false
         String news_index = DEFAULT_ES_INDEX
         String sentiment_index = DEFAULT_ENTITY_ES_INDEX
         String momentum_index = DEFAULT_MOMENTUM_ES_INDEX
 
+        def isValid() {
+            def valid = true
+            valid &= es.isValid()
+            valid &= [news_index, sentiment_index, momentum_index].inject(true) {b, k->
+                b &= (k != null && !k.isEmpty()); b
+            }
+            return valid
+        }
+
         @Override
         public String toString() {
             return "Config{" +
                 "es=" + es +
+                ", s3=" + s3 +
                 ", newsApi=" + newsApi +
+                ", archiver=" + archiver +
                 ", clean=" + clean +
                 ", news_index='" + news_index + '\'' +
                 ", sentiment_index='" + sentiment_index + '\'' +
                 ", momentum_index='" + momentum_index + '\'' +
-                '}'
+                '}';
         }
     }
 
     //TODO: this whole thing is OBE and should either be dropped or rewritten to handle the expanded functionality
     static void main(String[] args) {
-        def cli = new CliBuilder(usage: "APNewCollector")
+        def cli = new CliBuilder(usage: "NewCollector")
         cli.esUrl(args: 1, argName: "URL", "URL for ES [default: $DEFAULT_ES_URL]")
         cli.esIndex(args: 1, argName: "index", "ES index name [default: $DEFAULT_ES_INDEX]")
         cli.esUser(args: 1, argName: "user", "username for ES authentication [default: $DEFAULT_ES_USER]")
         cli.esPass(args: 1, argName: "pass", "password for ES authentication [default: $DEFAULT_ES_PASS]")
         cli.newsApiKey(args: 1, argName: "apiKey", "key for newsapi.org")
+        cli.propertiesFile(args: 1, argName: "propertiesFile", "properties file location")
         cli.clean("drop and build the ES index")
         cli.help("print this message")
         def options = cli.parse(args)
@@ -110,7 +125,12 @@ class NewsCollector {
         def appConfig = new Config()
         def esConfig = new ESClient.Config()
         def newsApiConfig = new NewsAPIScraper.Config()
-        def propertyConfig = new ConfigSlurper().parse(this.classLoader.getResource("properties.groovy"))
+        def propertyConfig
+        if (cliConfig.propertiesFile) {
+            propertyConfig = new ConfigSlurper().parse(this.getResource(cliConfig.propertiesFile as String))
+        } else {
+            propertyConfig = new ConfigSlurper().parse(this.classLoader.getResource("properties.groovy"))
+        }
 
         esConfig.with {
             url = cliConfig.esUrl ?: propertyConfig.es.url ?: DEFAULT_ES_URL
@@ -126,8 +146,12 @@ class NewsCollector {
         appConfig.es = esConfig
         appConfig.newsApi = newsApiConfig
         appConfig.clean = cliConfig.clean ?: propertyConfig.clean ?: false
+        appConfig.news_index = propertyConfig.es.index
         appConfig.momentum_index = propertyConfig.es.momentum_index
         appConfig.sentiment_index = propertyConfig.es.sentiment_index
+
+        assert appConfig.isValid() :  "config is hosed...fix it"
+
         return appConfig
     }
 }

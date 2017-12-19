@@ -1,5 +1,5 @@
 group 'com.elastic.barretta'
-version '1.6.1'
+version '1.7'
 
 //gives us the shadowJar task to build an uberjar for AWS Lambda
 buildscript {
@@ -15,7 +15,7 @@ apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'groovy'
 apply plugin: 'application'
 
-mainClassName = 'com.elastic.barretta.news_analysis.NewsCollector'
+mainClassName = project.hasProperty("mainClass") ? project.getProperty("mainClass") : 'com.elastic.barretta.news_analysis.NewsCollector'
 
 task sourcesJar(type: Jar) {
     from sourceSets.main.allSource
@@ -30,15 +30,20 @@ repositories {
 dependencies {
     compile(
         'com.elastic.barretta:clients-rosette:0.3',
+        'com.elastic.barretta:clients-s3:0.1',
         'com.syncthemall:boilerpipe:1.2.2',
         'commons-cli:commons-cli:1.2',
-        'org.codehaus.groovy:groovy-all:2.4.11',
+        'org.codehaus.groovy:groovy-all:2.4.13',
         'com.github.groovy-wslite:groovy-wslite:1.1.3',
         'org.codehaus.gpars:gpars:1.2.1',
         'ch.qos.logback:logback-classic:1.2.3',
         'com.amazonaws:aws-lambda-java-core:1.1.0'
     )
     testCompile 'org.spockframework:spock-core:1.1-groovy-2.4'
+}
+
+processResources {
+    expand(version: version)
 }
 
 //distributions {
@@ -52,4 +57,5 @@ dependencies {
 //        }
 //    }
 //}
+
 

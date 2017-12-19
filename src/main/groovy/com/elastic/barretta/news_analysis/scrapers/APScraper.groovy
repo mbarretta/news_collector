@@ -44,20 +44,19 @@ class APScraper {
                 //quality-check - not all "articles" are actually articles
                 if (article && article.storyHTML && !article.shortId.contains(":")) {
                     def doc = [
-                        title         : article.title,
-                        shortId       : article.shortId,
-                        url           : article.localLinkUrl,
-                        byline        : article.bylines,
-                        date_published: article.published,
-                        source        : "associated-press",
-                        section       : tag,
-                        text          : article.storyHTML.replaceAll(/<.*?>/, "").replaceAll(/\s{2,}/, " ")
+                        title  : article.title,
+                        shortId: article.shortId,
+                        url    : article.localLinkUrl,
+                        byline : article.bylines,
+                        date   : article.published,
+                        source : "associated-press",
+                        section: tag,
+                        text   : article.storyHTML.replaceAll(/<.*?>/, "").replaceAll(/\s{2,}/, " ")
                     ]
 
                     //filter empties and duplicates
                     if (doc.text && !doc.text.trim().isEmpty() &&
-                        !client.docExists("url.keyword", article.localLinkUrl) && !client.docExists("shortId", article.shortId))
-                    {
+                        !client.docExists("url.keyword", article.localLinkUrl) && !client.docExists("shortId", article.shortId)) {
                         def newId = client.postDoc(enricher.enrich(doc))
                         Utils.writeEntitySentimentsToOwnIndex(newId, doc, client)
                         posted++
@@ -69,7 +68,7 @@ class APScraper {
                 }
             }
             log.trace("...posted [$posted]")
-            results << [(tag):posted]
+            results << [(tag): posted]
         }
 
         log.info("results:\n$results")

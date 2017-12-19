@@ -50,12 +50,12 @@ class NewsAPIScraper {
                 //loop through each article we found...
                 new JsonSlurper().parse(url).articles.each { article ->
                     def doc = [
-                        title         : article.title,
-                        url           : article.url,
-                        byline        : article.author,
-                        date_published: article.publishedAt,
-                        source        : it,
-                        text          : ArticleExtractor.INSTANCE.getText(article.url.toURL())
+                        title : article.title,
+                        url   : article.url,
+                        byline: article.author,
+                        date  : article.publishedAt,
+                        source: it,
+                        text  : ArticleExtractor.INSTANCE.getText(article.url.toURL())
                     ]
 
                     //if it has a body...
@@ -76,8 +76,8 @@ class NewsAPIScraper {
                             def existingDoc = client.getDocByUniqueField("url.keyword", doc.url)
 
                             //if the doc has a new published date, we'll assume content was changed or added: we'll be doing an update
-                            if (existingDoc._source.date_published != doc.date_published) {
-                                log.trace("...updating due to newer timestamp [$doc.date_published] vs [$existingDoc._source.date_published]")
+                            if (existingDoc._source.date != doc.date){
+                                log.trace("...updating due to newer timestamp [$doc.date vs [$existingDoc._source.date]")
                                 client.updateDoc(existingDoc._id, enricher.enrich(doc))
                                 posted++
                             }

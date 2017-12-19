@@ -24,20 +24,33 @@ class ESClient {
         String user
         String pass
 
+        //lame validation
+        def isValid() {
+            def valid = [url, index, type].inject(true) { b, k ->
+                b &= (k != null && !k.isEmpty()); b
+            }
+            if (user != null && !user.isEmpty()) {
+                valid &= !pass.isEmpty()
+            }
+            valid &= (url != null && url.startsWith("http"))
+            return valid
+        }
+
         @Override
         public String toString() {
             return "Config{" +
-                "\nurl [" + url + ']' +
-                "\nindex [" + index + ']' +
-                "\ntype [" + type + ']' +
-                "\nuser [" + user + ']' +
-                "\npass [hidden] " +
-                '\n}'
+                "url='" + url + '\'' +
+                ", index='" + index + '\'' +
+                ", type='" + type + '\'' +
+                ", user='" + user + '\'' +
+                ", pass='" + pass + '\'' +
+                '}';
         }
     }
 
     ESClient(Config config) {
         this.client = new RESTClient(config.url as String)
+        this.client.defaultContentTypeHeader = "application/json"
         this.config = config
         if (config.user) {
             client.authorization = new HTTPBasicAuthorization(config.user, config.pass)
@@ -150,27 +163,31 @@ class ESClient {
             }
 
             log.info("found [${response.json.hits.total}] records...")
-            def scrollId = response.json._scroll_id
 
-            GParsPool.withPool {
-                def asyncMapFunction = mapFunction.async()
+            if (response.json.hits.total > 0) {
+                def scrollId = response.json._scroll_id
 
-                //do first batch
-                log.info("...queuing first batch of [$batchSize]")
-                response.json.hits.hits.collect().each {
-                    asyncMapFunction(it as Map)
-                }
+                GParsPool.withPool {
+                    def asyncMapFunction = mapFunction.async()
 
-                //do other batches if we need to
-                while (response.json.hits.hits.size() >= batchSize) {
-                    response = client.post(path: "/_search/scroll") {
-                        json scroll: keepAlive, scroll_id: scrollId
-                    }
-                    log.info("...queuing batch w/ [${response.json.hits.hits.size()}] results")
+                    //do first batch
+                    log.info("...queuing first batch of [$batchSize]")
                     response.json.hits.hits.collect().each {
                         asyncMapFunction(it as Map)
                     }
-                    scrollId = response.json._scroll_id
+
+                    //do other batches if we need to
+                    while (response.json.hits.hits.size() >= batchSize) {
+                        response = client.post(path: "/_search/scroll") {
+                            json scroll: keepAlive, scroll_id: scrollId
+                        }
+                        log.info("...queuing batch w/ [${response.json.hits.hits.size()}] results")
+                        response.json.hits.hits.collect().each {
+                            asyncMapFunction(it as Map)
+                        }
+                        scrollId = response.json._scroll_id
+
+                    }
                 }
             }
         } catch (RESTClientException e) {

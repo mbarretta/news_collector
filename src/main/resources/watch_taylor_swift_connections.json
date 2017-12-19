@@ -24,7 +24,7 @@
                     "password": "a08KbLCCWhr0J9IBh97ULfKX"
                   }
                 },
-                "body": "{\"controls\": {\"use_significance\": false,\"sample_size\": 20000,\"timeout\": 5000},\"query\": {\"bool\": {\"filter\": {\"range\": {\"date_published\": {\"lt\": \"now-1d/d\"}}},\"must\": [{\"match\": {\"entityResolvedPeople.keyword\": \"Taylor Swift\"}}],\"boost\":1}},\"vertices\": [{\"field\": \"entityResolvedPeople.keyword\",\"min_doc_count\": 1}],\"connections\": {\"vertices\": [{\"field\": \"entityResolvedPeople.keyword\",\"size\": 5000,\"min_doc_count\": 1,\"exclude\": [\"Taylor Swift\"]}]}}"
+                "body": "{\"controls\": {\"use_significance\": false,\"sample_size\": 20000,\"timeout\": 5000},\"query\": {\"bool\": {\"filter\": {\"range\": {\"date\": {\"lt\": \"now-1d/d\"}}},\"must\": [{\"match\": {\"entityResolvedPeople.keyword\": \"Taylor Swift\"}}],\"boost\":1}},\"vertices\": [{\"field\": \"entityResolvedPeople.keyword\",\"min_doc_count\": 1}],\"connections\": {\"vertices\": [{\"field\": \"entityResolvedPeople.keyword\",\"size\": 5000,\"min_doc_count\": 1,\"exclude\": [\"Taylor Swift\"]}]}}"
               }
             }
           }
@@ -46,7 +46,7 @@
                     "password": "a08KbLCCWhr0J9IBh97ULfKX"
                   }
                 },
-                "body": "{\"controls\": {\"use_significance\": false,\"sample_size\": 20000,\"timeout\": 5000},\"query\": {\"bool\": {\"filter\": {\"range\": {\"date_published\": {\"gte\": \"now-1d/d\",\"lte\":\"now-1d/d\"}}},\"must\": [{\"match\": {\"entityResolvedPeople.keyword\": \"Taylor Swift\"}}],\"boost\":1}},\"vertices\": [{\"field\": \"entityResolvedPeople.keyword\",\"min_doc_count\": 1}],\"connections\": {\"vertices\": [{\"field\": \"entityResolvedPeople.keyword\",\"size\": 100,\"min_doc_count\": 1,\"exclude\": [\"Taylor Swift\"]}]}}"
+                "body": "{\"controls\": {\"use_significance\": false,\"sample_size\": 20000,\"timeout\": 5000},\"query\": {\"bool\": {\"filter\": {\"range\": {\"date\": {\"gte\": \"now-1d/d\",\"lte\":\"now-1d/d\"}}},\"must\": [{\"match\": {\"entityResolvedPeople.keyword\": \"Taylor Swift\"}}],\"boost\":1}},\"vertices\": [{\"field\": \"entityResolvedPeople.keyword\",\"min_doc_count\": 1}],\"connections\": {\"vertices\": [{\"field\": \"entityResolvedPeople.keyword\",\"size\": 100,\"min_doc_count\": 1,\"exclude\": [\"Taylor Swift\"]}]}}"
               }
             }
           }

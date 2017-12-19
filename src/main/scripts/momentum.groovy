@@ -1,8 +1,6 @@
-import com.elastic.barretta.news_analysis.Enricher
 import com.elastic.barretta.news_analysis.NewsCollector
 import wslite.http.auth.HTTPBasicAuthorization
 import wslite.rest.RESTClient
-
 
 //todo: put in sync with actual momentum code
 
@@ -22,26 +20,26 @@ while (date.before(Calendar.instance)) {
     body = [
         query: [
             range: [
-                date_published: [
+                date: [
                     gte: "$dateString 11:11:11||-2d/d",
                     lte: "$dateString 11:11:11||/d"
                 ]
             ]
         ],
-        aggs: [
+        aggs : [
             daily: [
                 date_histogram: [
-                    field   : "date_published",
+                    field   : "date",
                     interval: "day"
                 ],
-                aggs: [
+                aggs          : [
                     entities: [
                         terms: [
                             field: "entityPeople.keyword",
                             size : 10000
 
                         ],
-                        aggs: [
+                        aggs : [
                             sources: [
                                 terms: [
                                     field: "source",
@@ -69,7 +67,7 @@ while (date.before(Calendar.instance)) {
             if (i < 2) {
                 def match = buckets[i + 1].entities.buckets.find { it.key == entity.key }
                 diff = (match) ? match.doc_count / entity.doc_count : entity.doc_count
-                data[entity.key] += (diff * Math.min(1/2 * sourceCount, 2 as double))
+                data[entity.key] += (diff * Math.min(1 / 2 * sourceCount, 2 as double))
             }
 
             //can't reach ahead to the next bucket anymore...
