@@ -24,7 +24,7 @@ class Utils {
                         articleId : id,
                         source    : it.source
                     ],
-                    NewsCollector.DEFAULT_ENTITY_ES_INDEX
+                    "news_entity_sentiment"
                 )
             }
         }

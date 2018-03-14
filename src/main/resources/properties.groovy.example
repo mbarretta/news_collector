@@ -6,7 +6,14 @@ es {
 //    user = "elastic"
 //    pass = "changeme"
 }
-
+s3 {
+    bucket = "" //buck name
+    prefix = "news_archive" //file name prefix
+}
+archiver {
+//    startDate = "" //in 'yyyy-MM-dd HH:mm:ss' format
+//    endDate = "" //in 'yyyy-MM-dd HH:mm:ss' format
+}
 /* uncomment to enable fetching from News API - also, get a key
 newsApi {
     key = ""

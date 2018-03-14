@@ -117,7 +117,7 @@ class Enricher {
         return doc
     }
 
-    static def calculateMomentum(ESClient client, Date date = new Date(), String index = NewsCollector.DEFAULT_ES_INDEX) {
+    static def calculateMomentum(ESClient client, Date date = new Date()) {
         def dateString = date.format("yyyy-MM-dd")
 
         def body = [
@@ -156,7 +156,7 @@ class Enricher {
                 ]
             ]
         ]
-        def response = client.post(path: "$index/_search?size=0") {
+        def response = client.post(path: "${NewsCollector.DEFAULT_ES_INDEX_PREFIX}/_search?size=0") {
             json body
         }
 

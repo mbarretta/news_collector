@@ -87,7 +87,7 @@ class NewsAPIScraper {
                 log.trace("...posted [$posted]")
                 results << [(it): posted]
             } catch (e) {
-                log.error("error fetching or posting article [${e.cause}]")
+                log.error("error fetching or posting article [$e.cause] [$e.message]")
             }
         }
         log.info("results:\n$results")

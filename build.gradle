@@ -1,25 +1,100 @@
 group 'com.elastic.barretta'
-version '1.7'
+version '2.0'
 
-//gives us the shadowJar task to build an uberjar for AWS Lambda
+//gives us the shadowJar task to build an uberjar for AWS Lambda and docker stuff
 buildscript {
     repositories {
         jcenter()
     }
     dependencies {
         classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.0'
+        classpath 'com.bmuschko:gradle-docker-plugin:3.2.4'
     }
 }
 apply plugin: 'com.github.johnrengelman.shadow'
-
+apply plugin: 'com.bmuschko.docker-remote-api'
 apply plugin: 'groovy'
 apply plugin: 'application'
+
+import com.bmuschko.gradle.docker.tasks.image.Dockerfile
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 
 mainClassName = project.hasProperty("mainClass") ? project.getProperty("mainClass") : 'com.elastic.barretta.news_analysis.NewsCollector'
 
 task sourcesJar(type: Jar) {
     from sourceSets.main.allSource
     classifier = 'sources'
+}
+
+task moveDockerFiles(type: Copy) {
+    dependsOn build
+    from("$buildDir/libs")
+    from("$buildDir/resources/main") {
+        include 'Dockerfile.template'
+        include 'properties.groovy'
+    }
+    into "$buildDir/docker"
+}
+
+task createMomentumDockerfile(type: Dockerfile) {
+    dependsOn moveDockerFiles
+    destFile = project.file("$buildDir/docker/Dockerfile-Momentum")
+    instructionsFromTemplate("src/main/resources/Dockerfile.template")
+    copyFile("news_collector-$version-all.jar", ".")
+    copyFile("properties.groovy", ".")
+    label([version: project.version.toString()])
+    defaultCommand("java", "-cp", "news_collector-$version-all.jar", "com.elastic.barretta.news_analysis.EntityMomentum","-propertiesFile","/usr/share/properties.groovy")
+}
+
+task createArchiverDockerfile(type: Dockerfile) {
+    dependsOn moveDockerFiles
+    destFile = project.file("$buildDir/docker/Dockerfile-Archiver")
+    instructionsFromTemplate("src/main/resources/Dockerfile.template")
+    copyFile("news_collector-$version-all.jar", ".")
+    copyFile("properties.groovy", ".")
+    label([version: project.version.toString()])
+    defaultCommand("java", "-cp", "news_collector-$version-all.jar", "com.elastic.barretta.news_analysis.Archiver","-propertiesFile","/usr/share/properties.groovy")
+}
+
+task createCollectorDockerfile(type: Dockerfile) {
+    dependsOn moveDockerFiles
+    destFile = project.file("$buildDir/docker/Dockerfile-Collector")
+    instructionsFromTemplate("src/main/resources/Dockerfile.template")
+    copyFile("news_collector-$version-all.jar", ".")
+    copyFile("properties.groovy", ".")
+    label([version: project.version.toString()])
+    defaultCommand("java", "-cp", "news_collector-$version-all.jar", "com.elastic.barretta.news_analysis.NewsCollector","-propertiesFile","/usr/share/properties.groovy")
+}
+
+task buildMomentumDockerImage(type: DockerBuildImage) {
+    dependsOn createMomentumDockerfile
+    dockerFile = createMomentumDockerfile.destFile
+    inputDir = createMomentumDockerfile.destFile.parentFile
+    tag = "momentum:$project.version"
+}
+
+task buildArchiverDockerImage(type: DockerBuildImage) {
+    dependsOn createArchiverDockerfile
+    dockerFile = createArchiverDockerfile.destFile
+    inputDir = createArchiverDockerfile.destFile.parentFile
+    tag = "archiver:$project.version"
+}
+
+task buildCollectorDockerImage(type: DockerBuildImage) {
+    dependsOn createCollectorDockerfile
+    dockerFile = createCollectorDockerfile.destFile
+    inputDir = createCollectorDockerfile.destFile.parentFile
+    tag = "collector:$project.version"
+}
+
+task buildContainers {
+    dependsOn buildMomentumDockerImage
+    dependsOn buildArchiverDockerImage
+    dependsOn buildCollectorDockerImage
+}
+
+tasks.withType(GroovyCompile) {
+    groovyOptions.optimizationOptions.indy = true
 }
 
 repositories {
@@ -33,7 +108,8 @@ dependencies {
         'com.elastic.barretta:clients-s3:0.1',
         'com.syncthemall:boilerpipe:1.2.2',
         'commons-cli:commons-cli:1.2',
-        'org.codehaus.groovy:groovy-all:2.4.13',
+        'org.elasticsearch.client:elasticsearch-rest-high-level-client:6.2.2',
+        'org.codehaus.groovy:groovy-all:2.4.13:indy',
         'com.github.groovy-wslite:groovy-wslite:1.1.3',
         'org.codehaus.gpars:gpars:1.2.1',
         'ch.qos.logback:logback-classic:1.2.3',
@@ -46,16 +122,5 @@ processResources {
     expand(version: version)
 }
 
-//distributions {
-//    awsLambda {
-//        contents {
-//            from compileGroovy
-//            from processResources
-//            into('lib') {
-//                from configurations.runtime
-//            }
-//        }
-//    }
-//}
 
 

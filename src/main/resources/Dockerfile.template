@@ -1,0 +1,4 @@
+FROM openjdk:8-alpine
+LABEL maintainer="Mike Barretta <mike.barretta@elastic.co>"
+
+USER root

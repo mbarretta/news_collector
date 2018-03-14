@@ -3,10 +3,23 @@ package com.elastic.barretta.news_analysis
 import groovy.json.JsonOutput
 import groovy.util.logging.Slf4j
 import groovyx.gpars.GParsPool
+import org.apache.http.HttpHost
+import org.apache.http.auth.AuthScope
+import org.apache.http.auth.UsernamePasswordCredentials
+import org.apache.http.client.CredentialsProvider
+import org.apache.http.impl.client.BasicCredentialsProvider
+import org.apache.http.impl.nio.client.HttpAsyncClientBuilder
+import org.elasticsearch.action.bulk.BulkProcessor
+import org.elasticsearch.action.bulk.BulkRequest
+import org.elasticsearch.action.bulk.BulkResponse
+import org.elasticsearch.action.index.IndexRequest
+import org.elasticsearch.client.RestClient
+import org.elasticsearch.client.RestClientBuilder
+import org.elasticsearch.client.RestHighLevelClient
+import org.elasticsearch.common.unit.TimeValue
 import wslite.http.auth.HTTPBasicAuthorization
 import wslite.rest.RESTClient
 import wslite.rest.RESTClientException
-
 /**
  * lightweight ES client
  */
@@ -15,7 +28,8 @@ class ESClient {
 
     @Delegate
     private RESTClient client
-    private Config config
+    private RestHighLevelClient client2
+    Config config
 
     static class Config {
         String url
@@ -43,8 +57,8 @@ class ESClient {
                 ", index='" + index + '\'' +
                 ", type='" + type + '\'' +
                 ", user='" + user + '\'' +
-                ", pass='" + pass + '\'' +
-                '}';
+                ", pass='<hidden>'" +
+                '}'
         }
     }
 
@@ -199,24 +213,33 @@ class ESClient {
     }
 
     def bulkInsert(List<Map> records, String index = config.index, String ttype = config.type) {
-        def post = new StringBuilder()
+        log.info("looking to bulk insert [${records.size()}] records")
+        init()
         def recordCount = records.size()
 
-        records.each { record ->
-            post.append('{"index":{}}').append("\n").append(JsonOutput.toJson(record)).append("\n")
+        def listener = new BulkProcessor.Listener(){
+
+            @Override
+            void beforeBulk(long executionId, BulkRequest request) {
+                log.info("bulk inserting [${request.numberOfActions()}] records to [$index]")
+            }
+
+            @Override
+            void afterBulk(long executionId, BulkRequest request, BulkResponse response) {
+                recordCount = request.numberOfActions()
+            }
+
+            @Override
+            void afterBulk(long executionId, BulkRequest request, Throwable failure) {
+                log.error("error running bulk insert [$failure.message]", failure)
+                recordCount = 0
+
+            }
         }
-        try {
-            log.info("bulk inserting [$recordCount] records to [$index]")
-            client.put(path: "/$index/$ttype/_bulk") {
-                type "application/x-ndjson"
-                text post.toString()
-            }
-        } catch (RESTClientException e) {
-            log.error("error running bulk insert [$e.cause]")
-            if (e.response.statusCode == 400) {
-                log.error("detail [\n${JsonOutput.prettyPrint(new String(e.response.data))}\n]")
-            }
-            recordCount = 0
+        def builder = BulkProcessor.builder(client2.&bulkAsync, listener).setFlushInterval(TimeValue.timeValueSeconds(5L)).build()
+
+        records.each { record ->
+            builder.add(new IndexRequest(index, ttype).source(record))
         }
         return recordCount
     }
@@ -230,5 +253,20 @@ class ESClient {
             log.error("unable to connect to ES [${e.message}]\n$config")
             System.exit(1)
         }
+    }
+
+    private init() {
+        def url = new URL(config.url)
+        final CredentialsProvider credentialsProvider = new BasicCredentialsProvider()
+        credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(config.user, config.pass))
+
+        def builder = RestClient.builder(new HttpHost(url.host, url.port, url.protocol))
+            .setHttpClientConfigCallback(new RestClientBuilder.HttpClientConfigCallback() {
+            @Override
+            public HttpAsyncClientBuilder customizeHttpClient(HttpAsyncClientBuilder httpClientBuilder) {
+                return httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider)
+            }
+        })
+        client2 = new RestHighLevelClient(builder)
     }
 }

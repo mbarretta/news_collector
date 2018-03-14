@@ -17,9 +17,10 @@ class NewsCollectorLambda implements RequestHandler<NewsCollector.Config, String
         def newsApiConfig = new NewsAPIScraper.Config()
         def propertyConfig = new ConfigSlurper().parse(this.class.classLoader.getResource("properties.groovy"))
 
+        request.indexPrefix = request.indexPrefix ?: NewsCollector.DEFAULT_ES_INDEX_PREFIX
+
         esConfig.with {
             url = request.es.url ?: propertyConfig.es.url ?: NewsCollector.DEFAULT_ES_URL
-            index = request.es.url ?: propertyConfig.es.index ?: NewsCollector.DEFAULT_ES_INDEX
             type = NewsCollector.DEFAULT_ES_TYPE
             user = request.es.user ?: propertyConfig.es.user ?: NewsCollector.DEFAULT_ES_USER
             pass = request.es.pass ?: propertyConfig.es.pass ?: NewsCollector.DEFAULT_ES_PASS
