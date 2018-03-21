@@ -185,7 +185,7 @@ class ESClient {
                     def asyncMapFunction = mapFunction.async()
 
                     //do first batch
-                    log.info("...queuing first batch of [$batchSize]")
+                    log.debug("...queuing first batch of [$batchSize]")
                     response.json.hits.hits.collect().each {
                         asyncMapFunction(it as Map)
                     }
@@ -195,7 +195,7 @@ class ESClient {
                         response = client.post(path: "/_search/scroll") {
                             json scroll: keepAlive, scroll_id: scrollId
                         }
-                        log.info("...queuing batch w/ [${response.json.hits.hits.size()}] results")
+                        log.debug("...queuing batch w/ [${response.json.hits.hits.size()}] results")
                         response.json.hits.hits.collect().each {
                             asyncMapFunction(it as Map)
                         }

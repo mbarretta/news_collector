@@ -4,6 +4,7 @@ import com.amazonaws.services.s3.model.ObjectMetadata
 import com.elastic.barretta.clients.S3Client
 import groovy.json.JsonOutput
 import groovy.util.logging.Slf4j
+import groovyx.gpars.GParsExecutorsPool
 
 import java.nio.file.Files
 import java.text.SimpleDateFormat
@@ -60,21 +61,22 @@ class Archiver {
         }
 
         doConfig(options)
-        run()
+        run(config)
     }
 
-    static def run() {
+    static def run(NewsCollector.Config config) {
         log.info("running with config [$config]")
 
-        doIndex(config.news_index)
-        doIndex(config.momentum_index)
-        doIndex(config.sentiment_index)
+        GParsExecutorsPool.withPool {
+            it.execute({ doIndex(config, config.news_index) } as Runnable)
+            it.execute({ doIndex(config, config.momentum_index) } as Runnable)
+            it.execute({ doIndex(config, config.sentiment_index) } as Runnable)
+        }
     }
 
-    static def doIndex(index) {
+    static def doIndex(final NewsCollector.Config config, final String index) {
         log.info("archiving index [$index] [${config.archiver.startDate} - ${config.archiver.endDate}]")
-        config.es.index = index
-        def esClient = new ESClient(config.es)
+        def esClient = new ESClient(new ESClient.Config(url: config.es.url, index: index, user: config.es.user, pass: config.es.pass))
 
         def query = [
             constant_score: [
@@ -109,7 +111,7 @@ class Archiver {
             if (!config.archiver.outputFileName) {
                 key = Utils.generateS3KeyName(
                     config.archiver.s3.prefix,
-                    config.es.index, new SimpleDateFormat("yyyy-MM-dd").parse(config.archiver.startDate),
+                    index, new SimpleDateFormat("yyyy-MM-dd").parse(config.archiver.startDate),
                     "zip",
                     false
                 )
@@ -129,7 +131,7 @@ class Archiver {
             )
         }
 
-        log.info("done")
+        log.info("done with [$index]")
     }
 
     private static def doConfig(cliConfig) {

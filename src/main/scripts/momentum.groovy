@@ -15,7 +15,7 @@ request.es.with {
 client = new ESClient(request.es)
 
 date = Calendar.instance
-date.set(2017, 11, 18)
+date.set(2018, 2, 14)
 while (date.before(Calendar.instance)) {
     EntityMomentum.run(client, date.format("yyyy-MM-dd"))
     date.add(Calendar.DAY_OF_MONTH, 1)
