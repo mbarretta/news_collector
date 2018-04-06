@@ -94,7 +94,7 @@ class Archiver {
         def tmpDir = Files.createTempDirectory("archiver").toFile()
         log.debug("running ES query and saving results to tmp dir [$tmpDir.absoluteFile]")
         esClient.scrollQuery(query, 1000) {
-            new File(tmpDir, it._id + ".json").withWriter { writer ->
+            new File(tmpDir, "id-"+it._id + ".json").withWriter { writer ->
                 writer << JsonOutput.toJson(it._source)
             }
         }

@@ -2,7 +2,6 @@ package com.elastic.barretta.news_analysis
 
 import groovy.json.JsonOutput
 import groovy.util.logging.Slf4j
-import groovyx.gpars.GParsPool
 import org.apache.http.HttpHost
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
@@ -20,6 +19,7 @@ import org.elasticsearch.common.unit.TimeValue
 import wslite.http.auth.HTTPBasicAuthorization
 import wslite.rest.RESTClient
 import wslite.rest.RESTClientException
+
 /**
  * lightweight ES client
  */
@@ -170,6 +170,7 @@ class ESClient {
         return returnObj
     }
 
+
     def scrollQuery(Map body, int batchSize = 100, String keepAlive = "1m", Closure mapFunction) {
         try {
             def response = client.post(path: "/$config.index/$config.type/_search?scroll=$keepAlive") {
@@ -181,27 +182,23 @@ class ESClient {
             if (response.json.hits.total > 0) {
                 def scrollId = response.json._scroll_id
 
-                GParsPool.withPool {
-                    def asyncMapFunction = mapFunction.async()
+                //do first batch
+                log.debug("...processing first batch of [$batchSize]")
+                response.json.hits.hits.collect().each {
+                    mapFunction(it as Map)
+                }
 
-                    //do first batch
-                    log.debug("...queuing first batch of [$batchSize]")
+                //do other batches if we need to
+                while (response.json.hits.hits.size() >= batchSize) {
+                    response = client.post(path: "/_search/scroll") {
+                        json scroll: keepAlive, scroll_id: scrollId
+                    }
+                    log.debug("...processing batch w/ [${response.json.hits.hits.size()}] results")
                     response.json.hits.hits.collect().each {
-                        asyncMapFunction(it as Map)
+                        mapFunction(it as Map)
                     }
+                    scrollId = response.json._scroll_id
 
-                    //do other batches if we need to
-                    while (response.json.hits.hits.size() >= batchSize) {
-                        response = client.post(path: "/_search/scroll") {
-                            json scroll: keepAlive, scroll_id: scrollId
-                        }
-                        log.debug("...queuing batch w/ [${response.json.hits.hits.size()}] results")
-                        response.json.hits.hits.collect().each {
-                            asyncMapFunction(it as Map)
-                        }
-                        scrollId = response.json._scroll_id
-
-                    }
                 }
             }
         } catch (RESTClientException e) {
@@ -217,7 +214,7 @@ class ESClient {
         init()
         def recordCount = records.size()
 
-        def listener = new BulkProcessor.Listener(){
+        def listener = new BulkProcessor.Listener() {
 
             @Override
             void beforeBulk(long executionId, BulkRequest request) {
