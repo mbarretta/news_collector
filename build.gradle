@@ -1,5 +1,5 @@
 group 'com.elastic.barretta'
-version '2.0'
+version '2.2'
 
 //gives us the shadowJar task to build an uberjar for AWS Lambda and docker stuff
 buildscript {
@@ -108,6 +108,7 @@ dependencies {
         'com.elastic.barretta:clients-s3:0.1',
         'com.syncthemall:boilerpipe:1.2.2',
         'commons-cli:commons-cli:1.2',
+        'org.apache.commons:commons-compress:1.16.1',
         'org.elasticsearch.client:elasticsearch-rest-high-level-client:6.2.2',
         'org.codehaus.groovy:groovy-all:2.4.13:indy',
         'com.github.groovy-wslite:groovy-wslite:1.1.3',

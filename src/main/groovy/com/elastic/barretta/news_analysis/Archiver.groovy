@@ -67,14 +67,19 @@ class Archiver {
     static def run(NewsCollector.Config config) {
         log.info("running with config [$config]")
 
+        def dataDir = Files.createTempDirectory("archiver").toFile()
+        dataDir.deleteOnExit()
+
         GParsExecutorsPool.withPool {
-            it.execute({ doIndex(config, config.news_index) } as Runnable)
-            it.execute({ doIndex(config, config.momentum_index) } as Runnable)
-            it.execute({ doIndex(config, config.sentiment_index) } as Runnable)
+            it.execute({ doIndex(config, config.news_index, dataDir) } as Runnable)
+            it.execute({ doIndex(config, config.momentum_index, dataDir) } as Runnable)
+            it.execute({ doIndex(config, config.sentiment_index, dataDir) } as Runnable)
         }
+
+        zipAndPushToS3(dataDir)
     }
 
-    static def doIndex(final NewsCollector.Config config, final String index) {
+    static def doIndex(final NewsCollector.Config config, final String index, final baseDir) {
         log.info("archiving index [$index] [${config.archiver.startDate} - ${config.archiver.endDate}]")
         def esClient = new ESClient(new ESClient.Config(url: config.es.url, index: index, user: config.es.user, pass: config.es.pass))
 
@@ -83,27 +88,31 @@ class Archiver {
                 filter: [
                     range: [
                         date: [
-                            lte: config.archiver.endDate + " 00:00:00",
-                            gte: config.archiver.startDate + " 23:59:59"
+                            gte: config.archiver.startDate + " 00:00:00",
+                            lte: config.archiver.endDate + " 23:59:59"
                         ]
                     ]
                 ]
             ]
         ]
 
-        def tmpDir = Files.createTempDirectory("archiver").toFile()
-        log.debug("running ES query and saving results to tmp dir [$tmpDir.absoluteFile]")
+        def dataDir = new File("$baseDir/$index/doc")
+        dataDir.mkdirs()
+        log.debug("running ES query and saving results to tmp dir [$dataDir.absolutePath]")
         esClient.scrollQuery(query, 1000) {
-            new File(tmpDir, "id-"+it._id + ".json").withWriter { writer ->
+            new File(dataDir, "id-"+it._id + ".json").withWriter { writer ->
                 writer << JsonOutput.toJson(it._source)
             }
         }
 
-        if (tmpDir.list().length > 0) {
-            log.debug("building zip")
-            def zipStream = Utils.zipFile(tmpDir)
-            tmpDir.delete()
+        log.info("done with [$index]")
+    }
 
+    private static def zipAndPushToS3(dataDir)
+    {
+        if (dataDir.list().length > 0) {
+            log.debug("building zip")
+            def zipStream = Utils.createTarball(dataDir)
             def s3Client = new S3Client(config.archiver.s3)
 
             //write the zip to S3
@@ -111,8 +120,8 @@ class Archiver {
             if (!config.archiver.outputFileName) {
                 key = Utils.generateS3KeyName(
                     config.archiver.s3.prefix,
-                    index, new SimpleDateFormat("yyyy-MM-dd").parse(config.archiver.startDate),
-                    "zip",
+                    "all_news", new SimpleDateFormat("yyyy-MM-dd").parse(config.archiver.startDate),
+                    "tar.gz",
                     false
                 )
             } else {
@@ -121,7 +130,7 @@ class Archiver {
             log.debug("writing zip to S3 [$config.archiver.s3.bucket/$key]")
             def zipBytes = zipStream.toByteArray()
             def metadata = new ObjectMetadata()
-            metadata.setContentType("application/zip")
+            metadata.setContentType("application/gzip")
             metadata.setContentLength(Integer.toUnsignedLong(zipBytes.length))
             s3Client.putObject(
                 config.archiver.s3.bucket,
@@ -130,8 +139,6 @@ class Archiver {
                 metadata
             )
         }
-
-        log.info("done with [$index]")
     }
 
     private static def doConfig(cliConfig) {

@@ -1,9 +1,11 @@
 package com.elastic.barretta.news_analysis
 
+import groovy.io.FileType
 import groovy.util.logging.Slf4j
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream
 
-import java.util.zip.ZipEntry
-import java.util.zip.ZipOutputStream
+import java.util.zip.GZIPOutputStream
 
 @Slf4j
 class Utils {
@@ -30,27 +32,31 @@ class Utils {
         }
     }
 
-    static def zipFile(File input, ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-        ZipOutputStream zipStream = new ZipOutputStream(baos)
-        def zipper = { file ->
-            ZipEntry entry = new ZipEntry(file.name)
-            zipStream.putNextEntry(entry)
-            zipStream.write(file.bytes)
-            zipStream.closeEntry()
+    static def createTarball(File input, ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+        TarArchiveOutputStream out = null
+        def baseDir = input.absolutePath
+        def addIt = { File file ->
+            def entry = new TarArchiveEntry(file.path - baseDir)
+            entry.size = file.bytes.length
+
+            out.putArchiveEntry(entry)
+            out.write(file.bytes)
+            out.closeArchiveEntry()
         }
         try {
+            out = new TarArchiveOutputStream( new GZIPOutputStream( new BufferedOutputStream(baos)))
             if (input.isDirectory()) {
-                input.eachFile {
-                    zipper(it)
+                input.eachFileRecurse(FileType.FILES) {
+                    println it.absolutePath
+                    addIt(it)
                 }
             } else {
-                zipper(input)
+                addIt(input)
             }
-
         } catch (IOException ioe) {
-            log.error("error while zipping file [$input.name] [$ioe.cause]")
+            log.error("error while tar-ing file [$input.name] [$ioe.cause]")
         } finally {
-            zipStream.close()
+            out.close()
             baos.close()
         }
         return baos

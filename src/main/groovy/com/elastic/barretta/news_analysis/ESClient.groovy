@@ -177,7 +177,7 @@ class ESClient {
                 json size: batchSize, query: body
             }
 
-            log.info("found [${response.json.hits.total}] records...")
+            log.info("found [${response.json.hits.total}] records in [$config.index]")
 
             if (response.json.hits.total > 0) {
                 def scrollId = response.json._scroll_id
