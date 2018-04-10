@@ -47,7 +47,6 @@ class Utils {
             out = new TarArchiveOutputStream( new GZIPOutputStream( new BufferedOutputStream(baos)))
             if (input.isDirectory()) {
                 input.eachFileRecurse(FileType.FILES) {
-                    println it.absolutePath
                     addIt(it)
                 }
             } else {

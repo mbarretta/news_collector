@@ -1,50 +1,49 @@
+//indexPrefix = "news"
 es {
     url = "http://localhost:9200"
-    index = "news"
-    entity_sentiment_index = "news_entity_sentiment"
-    entity_momentum_index = "news_entity_momentum"
 //    user = "elastic"
 //    pass = "changeme"
 }
 s3 {
-    bucket = "" //buck name
+    bucket = "" //bucket name
     prefix = "news_archive" //file name prefix
 }
 archiver {
-//    startDate = "" //in 'yyyy-MM-dd HH:mm:ss' format
-//    endDate = "" //in 'yyyy-MM-dd HH:mm:ss' format
+//    startDate = "" //in 'yyyy-MM-dd' format
+//    endDate = "" //in 'yyyy-MM-dd' format
 }
-/* uncomment to enable fetching from News API - also, get a key
-newsApi {
-    key = ""
-    sources = [
-        "al-jazeera-english",
-        "ars-technica",
-        "associated-press",
-        "bbc-news",
-        "bbc-sport",
-        "bloomberg",
-        "business-insider",
-        "cnbc",
-        "cnn",
-        "financial-times",
-        "google-news",
-        "hacker-news",
-        "newsweek",
-        "new-york-magazine",
-        "reuters",
-        "techcrunch",
-        "the-economist",
-        "the-guardian-uk",
-        "the-new-york-times",
-        "the-times-of-india",
-        "the-wall-street-journal",
-        "the-washington-post",
-        "time",
-        "usa-today"
-    ]
-}
-*/
+
+//uncomment to enable fetching from News API - also, get a key
+//newsApi {
+//    key = ""
+//    sources = [
+//        "al-jazeera-english",
+//        "ars-technica",
+//        "associated-press",
+//        "bbc-news",
+//        "bbc-sport",
+//        "bloomberg",
+//        "business-insider",
+//        "cnbc",
+//        "cnn",
+//        "financial-times",
+//        "google-news",
+//        "hacker-news",
+//        "newsweek",
+//        "new-york-magazine",
+//        "reuters",
+//        "techcrunch",
+//        "the-economist",
+//        "the-guardian-uk",
+//       "the-new-york-times",
+//        "the-times-of-india",
+//        "the-wall-street-journal",
+//        "the-washington-post",
+//        "time",
+//        "usa-today"
+//    ]
+//}
+
 
 enrichment {
 

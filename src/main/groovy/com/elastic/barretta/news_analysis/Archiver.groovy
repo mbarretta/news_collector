@@ -49,9 +49,9 @@ class Archiver {
         cli.pass(args: 1, argName: "pass", "password for ES authentication [default: $NewsCollector.DEFAULT_ES_PASS]")
         cli.bucket(args: 1, argName: "bucket", "S3 bucket name for Archiver")
         cli.prefix(args: 1, argName: "prefix", "S3 file prefix for Archiver")
-        cli.startDate(args: 1, argName: "bucket", "S3 file start date for Archiver in 'yyyy-MM-dd")
-        cli.endDate(args: 1, argName: "bucket", "S3 file end date for Archiver 'yyyy-MM-dd'")
-        cli.outputFileName(args: 1, argName: "filename", "The filename to be used when writing to s3 [default: <index>-<start date yyyymmdd>.zip]")
+        cli.startDate(args: 1, argName: "bucket", "start date for Archiver in 'yyyy-MM-dd")
+        cli.endDate(args: 1, argName: "bucket", "end date for Archiver 'yyyy-MM-dd'")
+        cli.outputFileName(args: 1, argName: "filename", "The filename to be used when writing to s3 [default: all_data-<startDate yyyyMMdd>.tar.gz]")
         cli.help("print this message")
         def options = cli.parse(args)
 
@@ -146,9 +146,11 @@ class Archiver {
         def propertyConfig = new ConfigSlurper().parse(this.classLoader.getResource("properties.groovy"))
         def esConfig = new ESClient.Config()
 
-        def lastMonth = LocalDate.now().minusMonths(1)
-        def defaultStart = lastMonth.withDayOfMonth(1)
-        def defaultEnd = lastMonth.withDayOfMonth(lastMonth.lengthOfMonth())
+        //set default start and end date to pull everything from the beginning of the month until "yesterday"
+        //the intent is to have this run once per day and build an archive that's current to end of "yesterday"
+        def defaultStart = LocalDate.now().withDayOfMonth(1)
+        def defaultEnd = LocalDate.now() .minusDays(1)
+
         def defaultFormater = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         config.indexPrefix = cliConfig.indexPrefix ?: propertyConfig.indexPrefix ?: NewsCollector.DEFAULT_ES_INDEX_PREFIX
 
